@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://emlinter.app/sitemap.xml
