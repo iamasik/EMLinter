@@ -2,77 +2,77 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Static Pages -->
   <url>
-    <loc>https://emlinter.app/</loc>
+    <loc>https://emlinter.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/templates</loc>
+    <loc>https://emlinter.com/templates</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/visual-editor</loc>
+    <loc>https://emlinter.com/visual-editor</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/code-fix</loc>
+    <loc>https://emlinter.com/code-fix</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/beautify-code</loc>
+    <loc>https://emlinter.com/beautify-code</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/dark-mode-checker</loc>
+    <loc>https://emlinter.com/dark-mode-checker</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/design-copier</loc>
+    <loc>https://emlinter.com/design-copier</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/html-minifier</loc>
+    <loc>https://emlinter.com/html-minifier</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/outlook-background-generator</loc>
+    <loc>https://emlinter.com/outlook-background-generator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/outlook-button-generator</loc>
+    <loc>https://emlinter.com/outlook-button-generator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/outlook-ready-html</loc>
+    <loc>https://emlinter.com/outlook-ready-html</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/blog</loc>
+    <loc>https://emlinter.com/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/how-it-works</loc>
+    <loc>https://emlinter.com/how-it-works</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/faq</loc>
+    <loc>https://emlinter.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://emlinter.app/contact-us</loc>
+    <loc>https://emlinter.com/contact-us</loc>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -84,14 +84,14 @@
     
     Example for a template:
     <url>
-      <loc>https://emlinter.app/templates/your-template-slug</loc>
+      <loc>https://emlinter.com/templates/your-template-slug</loc>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
     </url>
     
     Example for a blog post:
     <url>
-      <loc>https://emlinter.app/blog/your-blog-post-slug</loc>
+      <loc>https://emlinter.com/blog/your-blog-post-slug</loc>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
     </url>
