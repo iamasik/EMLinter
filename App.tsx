@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import AnnouncementBar from './components/layout/AnnouncementBar';
@@ -79,6 +80,7 @@ export default function App() {
         </Routes>
       </main>
       <Footer />
+      <Analytics />
     </div>
   );
 }
