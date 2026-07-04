@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BlogPage from '../../../components/pages/BlogPage';
+---
+<BaseLayout title="Email Development Blog | Resource Silo" description="Latest tips and insights on email design.">
+  <BlogPage client:only="react" />
+</BaseLayout>

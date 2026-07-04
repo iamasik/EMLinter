@@ -1,0 +1,10 @@
+---
+export const prerender = false;
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductDetailPage from '../../../components/pages/ProductDetailPage';
+
+const { slug } = Astro.params;
+---
+<BaseLayout title="Product | EMLinter" description="View details for this premium email product.">
+  <ProductDetailPage slug={slug!} client:only="react" />
+</BaseLayout>

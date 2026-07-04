@@ -1,0 +1,10 @@
+---
+export const prerender = false;
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import VisualEditorPage from '../../components/pages/VisualEditorPage';
+
+const { slug } = Astro.params;
+---
+<BaseLayout title="Visual HTML Email Editor | EMLinter" description="Edit your templates visually without code.">
+  <VisualEditorPage slug={slug} client:only="react" />
+</BaseLayout>

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "astro-docs": {
+      "type": "http",
+      "url": "https://mcp.docs.astro.build/mcp"
+    },
+    "vercel": {
+      "type": "http",
+      "url": "https://mcp.vercel.com"
+    },
+    "tailwindcss": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "tailwindcss-mcp-server"],
+      "env": {}
+    }
+  }
+}

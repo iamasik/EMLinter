@@ -1,0 +1,10 @@
+---
+export const prerender = false;
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import BlogPostPage from '../../../components/pages/BlogPostPage';
+
+const { slug } = Astro.params;
+---
+<BaseLayout title="Blog Post | EMLinter" description="Read this article on HTML email development.">
+  <BlogPostPage slug={slug!} client:only="react" />
+</BaseLayout>

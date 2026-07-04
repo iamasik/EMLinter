@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import FaqPage from '../../components/pages/OurExpertsPage';
+---
+<BaseLayout title="FAQ & Support | Resource Silo" description="Answers to common questions about EMLinter.">
+  <FaqPage client:only="react" />
+</BaseLayout>

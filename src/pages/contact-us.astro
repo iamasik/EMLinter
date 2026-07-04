@@ -1,0 +1,7 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ContactUsPage from '../components/pages/ContactUsPage';
+---
+<BaseLayout title="Contact Us | EMLinter" description="Get in touch for custom projects.">
+  <ContactUsPage client:only="react" />
+</BaseLayout>
