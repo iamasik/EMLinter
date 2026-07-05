@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CoffeeIcon, MenuIcon, CloseIcon, WandIcon, ImageIcon, CheckCircleIcon, BookOpenIcon, NewspaperIcon, CursorClickIcon, CodeIcon, MoonIcon, QuestionMarkCircleIcon, LitmusIcon, ShoppingBagIcon } from '../Icons';
+import { CoffeeIcon, MenuIcon, CloseIcon, WandIcon, ImageIcon, CheckCircleIcon, BookOpenIcon, NewspaperIcon, CursorClickIcon, CodeIcon, MoonIcon, QuestionMarkCircleIcon, LitmusIcon, ShoppingBagIcon, ScaleIcon } from '../Icons';
 import ActionInfoModal from '../modals/ActionInfoModal';
 
 interface HeaderProps {
@@ -63,6 +63,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                 { page: 'tools/dark-mode-checker', label: 'Dark Mode Tester', description: 'Preview emails in dark mode', icon: <MoonIcon className="w-5 h-5" /> },
                 { page: 'tools/design-copier', label: 'Design Copier', description: 'Copy visual design to Gmail/Outlook', icon: <CursorClickIcon className="w-5 h-5" /> },
                 { page: 'tools/svg-to-png', label: 'SVG to PNG', description: 'View, edit, and convert SVG to PNG', icon: <ImageIcon className="w-5 h-5" /> },
+                { page: 'tools/relative-image-scaler', label: 'Relative Image Scaler', description: 'Scale image elements proportionally', icon: <ScaleIcon className="w-5 h-5" /> },
             ],
         },
         {

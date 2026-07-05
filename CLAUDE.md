@@ -123,6 +123,8 @@ section for how detail-page meta is made crawlable despite the `client:only` bod
 | `/tools/html-minifier`                       | `pages/tools/html-minifier.astro`                    | `HtmlMinifierPage`               |
 | `/tools/dark-mode-checker`                   | `pages/tools/dark-mode-checker.astro`                | `DarkModeCheckerPage`            |
 | `/tools/design-copier`                       | `pages/tools/design-copier.astro`                    | `DesignCopierPage`               |
+| `/tools/svg-to-png`                          | `pages/tools/svg-to-png.astro`                       | `SvgToPngPage`                   |
+| `/tools/relative-image-scaler`               | `pages/tools/relative-image-scaler.astro`            | `RelativeImageScalerPage`        |
 | `/solutions`                                 | `pages/solutions/index.astro`                        | `SolutionsHubPage`               |
 | `/solutions/html-email-test`                 | `pages/solutions/html-email-test.astro`              | `HtmlEmailTestPage`              |
 | `/solutions/outlook-button-generator`        | `pages/solutions/outlook-button-generator.astro`     | `OutlookButtonGeneratorPage`     |

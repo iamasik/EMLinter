@@ -1,0 +1,31 @@
+
+> emlinter-astro@0.0.1 dev
+> astro dev
+
+[2m15:14:11[22m [34m[@astrojs/node][39m Enabling sessions with filesystem storage
+[vite] connected.
+[2m15:14:14[22m [34m[types][39m Generated [2m2ms[22m
+[vite] connected.
+[42m[1m astro [22m[49m [32mv6.4.8[39m [2mready in[22m 4659 [2mms[22m
+[2m┃[22m Local    [36mhttp://localhost:4321/[39m
+[2m┃[22m Network  [2muse --host to expose[22m
+[2m15:14:14[22m [32mwatching for file changes...[39m
+[2m15:15:07[22m [34m[200][39m /visual-editor [2m306ms[22m
+[2m15:15:33[22m [34m[200][39m / [2m249ms[22m
+[2m15:15:50[22m [34m[200][39m /visual-editor [2m30ms[22m
+[2m15:15:54[22m [34m[200][39m / [2m16ms[22m
+[2m15:19:36[22m [34m[200][39m /templates [2m156ms[22m
+[2m15:19:43[22m [34m[200][39m /templates/secure-up-to-300m-with-boundless-ais-network [2m1527ms[22m
+[2m15:19:43[22m [34m[200][39m /templates/secure-up-to-300m-with-boundless-ais-network [2m955ms[22m
+[2m15:19:47[22m [34m[200][39m /visual-editor/secure-up-to-300m-with-boundless-ais-network [2m89ms[22m
+[2m15:22:46[22m [34m[200][39m /tools/svg-to-png [2m142ms[22m
+[2m15:27:36[22m [34m[200][39m /solutions/html-email-test [2m130ms[22m
+[2m15:27:44[22m [34m[200][39m /visual-editor [2m16ms[22m
+[2m15:27:48[22m [34m[200][39m /templates [2m9ms[22m
+[2m15:27:51[22m [34m[200][39m /templates/boundless-ai-smarter-capital-solutions-for-usa--eu [2m554ms[22m
+[2m15:27:53[22m [34m[200][39m /visual-editor/boundless-ai-smarter-capital-solutions-for-usa--eu [2m15ms[22m
+[2m15:28:38[22m [34m[200][39m /visual-editor [2m9ms[22m
+[2m15:28:50[22m [34m[200][39m /templates [2m8ms[22m
+[2m15:28:53[22m [34m[200][39m /templates/get-business-capital-in-24-hours--boundless-ai [2m445ms[22m
+[2m15:28:57[22m [34m[200][39m /visual-editor/get-business-capital-in-24-hours--boundless-ai [2m14ms[22m
+[2m15:29:47[22m [34m[200][39m / [2m9ms[22m

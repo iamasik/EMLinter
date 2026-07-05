@@ -54,6 +54,8 @@ const navColumns = [
             { href: '/tools/html-minifier', label: 'HTML Email Minifier' },
             { href: '/tools/dark-mode-checker', label: 'Dark Mode Tester' },
             { href: '/tools/design-copier', label: 'Design Copier' },
+            { href: '/tools/svg-to-png', label: 'SVG to PNG' },
+            { href: '/tools/relative-image-scaler', label: 'Relative Image Scaler' },
         ],
     },
     {

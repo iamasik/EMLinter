@@ -6,6 +6,7 @@ import {
     MoonIcon,
     CursorClickIcon,
     ImageIcon,
+    ScaleIcon,
 } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
@@ -53,6 +54,13 @@ const tools = [
         icon: ImageIcon,
         tone: 'from-sky-500/20 to-sky-500/5 text-sky-300 ring-sky-400/20',
     },
+    {
+        id: 'relative-image-scaler',
+        label: 'Relative Image Scaler',
+        description: 'Set a parent image target size and get every child element resized by the same ratio, with a live visual proof.',
+        icon: ScaleIcon,
+        tone: 'from-teal-500/20 to-teal-500/5 text-teal-300 ring-teal-400/20',
+    },
 ];
 
 const faqs = [
@@ -88,10 +96,10 @@ const ToolsHubPage: React.FC = () => (
             eyebrow="HTML Email Developer Tools"
             title={
                 <>
-                    Six free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
+                    Seven free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
                 </>
             }
-            subtitle="Lint, beautify, minify, dark-mode test, copy email designs, and convert SVG to PNG without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
+            subtitle="Lint, beautify, minify, dark-mode test, copy email designs, convert SVG to PNG, and scale image elements without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
         >
             <a href="/tools/code-fix" className="btn-primary">Open the linter</a>
             <a href="/templates" className="btn-secondary">Free templates</a>
