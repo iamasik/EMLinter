@@ -59,7 +59,7 @@ A single layout renders `<head>` and the chrome. It is richer than a plain wrapp
 - Default `ogImage` is `${SITE_URL}/og-default.png` — a branded 1200×630 asset that **exists** in `public/`.
   Regenerate it (e.g. via the bundled `sharp` from an SVG) if branding changes; don't point the default at
   a missing file.
-- `SITE_URL` is `https://emlinter.app` (also set as `site` in `astro.config.mjs` — keep both in sync).
+- `SITE_URL` is `https://emlinter.com` (also set as `site` in `astro.config.mjs` — keep both in sync).
   Update there if the domain changes.
 - Mounts `AnnouncementBar`, `Header`, `Breadcrumbs`, `Footer` (all `client:only="react"`) and `<slot />`s
   page content into `<main class="container-wide ...">`.
@@ -150,7 +150,7 @@ Notes:
   components so each shell stays a one-liner.
 - The FAQ route (`/resources/faq`) renders a component still named `OurExpertsPage`.
 - `VisualEditorPage` backs both `/visual-editor` and `/visual-editor/<slug>`. The `[slug]` shell sets
-  `canonical="https://emlinter.app/visual-editor"` so the deep-link variants don't compete as duplicates.
+  `canonical="https://emlinter.com/visual-editor"` so the deep-link variants don't compete as duplicates.
 - The four **detail shells** (`templates/[slug]`, `resources/blog/[slug]`, `resources/products/[slug]`)
   are **not** one-liners — they fetch from Firebase server-side to emit real per-entity meta (see SEO below).
 

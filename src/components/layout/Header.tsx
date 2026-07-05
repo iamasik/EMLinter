@@ -62,6 +62,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                 { page: 'tools/html-minifier', label: 'HTML Email Minifier', description: 'Compress HTML to reduce file size', icon: <CodeIcon className="w-5 h-5" /> },
                 { page: 'tools/dark-mode-checker', label: 'Dark Mode Tester', description: 'Preview emails in dark mode', icon: <MoonIcon className="w-5 h-5" /> },
                 { page: 'tools/design-copier', label: 'Design Copier', description: 'Copy visual design to Gmail/Outlook', icon: <CursorClickIcon className="w-5 h-5" /> },
+                { page: 'tools/svg-to-png', label: 'SVG to PNG', description: 'View, edit, and convert SVG to PNG', icon: <ImageIcon className="w-5 h-5" /> },
             ],
         },
         {

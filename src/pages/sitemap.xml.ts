@@ -3,7 +3,7 @@ import { getPosts, getTemplates, getProducts } from '../services/firebase';
 
 export const prerender = false;
 
-const SITE_URL = 'https://emlinter.app';
+const SITE_URL = 'https://emlinter.com';
 
 /** Static routes with per-page crawl priority + change cadence. */
 const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = [
@@ -15,6 +15,7 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
     { path: '/tools/html-minifier', priority: 0.8, changefreq: 'monthly' },
     { path: '/tools/dark-mode-checker', priority: 0.8, changefreq: 'monthly' },
     { path: '/tools/design-copier', priority: 0.8, changefreq: 'monthly' },
+    { path: '/tools/svg-to-png', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions', priority: 0.9, changefreq: 'monthly' },
     { path: '/solutions/html-email-test', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-button-generator', priority: 0.8, changefreq: 'monthly' },

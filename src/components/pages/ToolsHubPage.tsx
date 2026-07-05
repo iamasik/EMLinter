@@ -5,6 +5,7 @@ import {
     CodeIcon,
     MoonIcon,
     CursorClickIcon,
+    ImageIcon,
 } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
@@ -45,6 +46,13 @@ const tools = [
         icon: CursorClickIcon,
         tone: 'from-emerald-500/20 to-emerald-500/5 text-emerald-300 ring-emerald-400/20',
     },
+    {
+        id: 'svg-to-png',
+        label: 'SVG Viewer & to PNG',
+        description: 'Preview SVG code, resize, flip, rotate, and recolor it, then convert SVG to PNG at up to 4x or copy a data URI.',
+        icon: ImageIcon,
+        tone: 'from-sky-500/20 to-sky-500/5 text-sky-300 ring-sky-400/20',
+    },
 ];
 
 const faqs = [
@@ -80,10 +88,10 @@ const ToolsHubPage: React.FC = () => (
             eyebrow="HTML Email Developer Tools"
             title={
                 <>
-                    Five free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
+                    Six free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
                 </>
             }
-            subtitle="Lint, beautify, minify, dark-mode test, and copy email designs without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
+            subtitle="Lint, beautify, minify, dark-mode test, copy email designs, and convert SVG to PNG without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
         >
             <a href="/tools/code-fix" className="btn-primary">Open the linter</a>
             <a href="/templates" className="btn-secondary">Free templates</a>
