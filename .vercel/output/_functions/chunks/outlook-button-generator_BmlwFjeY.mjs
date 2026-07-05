@@ -1,0 +1,44 @@
+import { $ as $$BaseLayout } from './BaseLayout_CLZKUz5E.mjs';
+import { c as createComponent } from './astro-component_DyprLGAi.mjs';
+import 'piccolore';
+import { o as renderComponent, k as renderTemplate } from './entrypoint_BgjnLLDV.mjs';
+import { $ as $$SeoFallback } from './SeoFallback_BaCjZX_7.mjs';
+
+const $$OutlookButtonGenerator = createComponent(($$result, $$props, $$slots) => {
+  const faqSchema = [
+    { question: "What is a bulletproof button in HTML email?", answer: "A bulletproof button is an email CTA that renders identically across every email client, including Microsoft Outlook for Windows. It wraps the CTA in VML <v:roundrect> code so Outlook reads it as a vector shape, while every other client uses the regular CSS path." },
+    { question: "How does this html email button generator work?", answer: "You set text, URL, colors, dimensions, and corner radius, and the generator emits a single block of HTML containing both the modern CSS path and the VML fallback. Outlook clients use the VML; everyone else uses the CSS." },
+    { question: "Do bulletproof email buttons work in Gmail and Apple Mail?", answer: "Yes. The VML block is wrapped in conditional comments that only Outlook reads. Every other client falls through to the standard anchor tag with inline CSS." },
+    { question: "Why not just use a normal HTML button or image button?", answer: "Normal button elements are ignored by most clients, and image buttons fail when images are blocked. Bulletproof email buttons using VML are the only text-based option that renders identically across clients." },
+    { question: "Can I add background images to bulletproof buttons?", answer: 'Yes. The generator supports VML <v:fill type="tile"> for buttons with tiled background images — useful for textured CTAs and simple gradient effects.' },
+    { question: "Are these bulletproof email buttons accessible?", answer: "Yes. The output is plain text inside a real anchor tag, so screen readers announce the link and the button text is selectable. The VML version is hidden from accessibility tools by default." }
+  ];
+  const softwareLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "EMLinter Bulletproof Outlook Button Generator",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    description: "Free bulletproof button generator for HTML email. Emits VML + CSS hybrid code that renders identically in Outlook, Gmail, and Apple Mail.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" }
+  };
+  return renderTemplate`${renderComponent($$result, "BaseLayout", $$BaseLayout, { "title": "Free HTML Email Button Generator (Bulletproof) | EMLinter", "description": "Free bulletproof button generator. Build email CTAs that render identically in Outlook, Gmail & Apple Mail. Customize colors, size & corners, copy VML+CSS code.", "keywords": "bulletproof buttons, html email button generator, bulletproof button, email button, email buttons, bulletproof email buttons", "jsonLd": softwareLd, "faqSchema": faqSchema }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "OutlookButtonGeneratorPage", null, { "client:only": "react", "client:component-hydration": "only", "client:component-path": "C:/Users/DH Asik/Desktop/Project/emlinter-astro/src/components/pages/OutlookButtonGeneratorPage", "client:component-export": "default" }, { "fallback": ($$result3) => renderTemplate`${renderComponent($$result3, "SeoFallback", $$SeoFallback, { "slot": "fallback", "heading": "Make a bulletproof button that survives every version of Outlook.", "intro": "Free html email button generator that emits VML + CSS hybrid code. Customize colors, size, font, and corners — get production-ready bulletproof email buttons that render identically in Outlook, Gmail, and Apple Mail.", "links": [
+    { href: "/solutions/outlook-background-generator", label: "Outlook Background Generator" },
+    { href: "/solutions/outlook-ready-html", label: "Outlook HTML Sanitizer" },
+    { href: "/solutions", label: "All Outlook Solutions" }
+  ] })}` })} ` })}`;
+}, "C:/Users/DH Asik/Desktop/Project/emlinter-astro/src/pages/solutions/outlook-button-generator.astro", void 0);
+
+const $$file = "C:/Users/DH Asik/Desktop/Project/emlinter-astro/src/pages/solutions/outlook-button-generator.astro";
+const $$url = "/solutions/outlook-button-generator";
+
+const _page = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: $$OutlookButtonGenerator,
+  file: $$file,
+  url: $$url
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const page = () => _page;
+
+export { page };

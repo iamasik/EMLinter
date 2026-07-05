@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RelativeImageScalerPage from '../../components/pages/RelativeImageScalerPage';
+import SeoFallback from '../../components/SeoFallback.astro';
+
+const faqSchema = [
+  { question: 'What is a proportional image element scaler?', answer: 'A proportional image element scaler resizes a set of smaller graphic elements by the exact same ratio you use to resize a larger parent image. Upload a Mother Image, type the target width and height, then drop in child element images. The tool derives horizontal and vertical scale factors from the parent and applies them to every child so each element keeps its correct relative size.' },
+  { question: 'How does the relative image resizer calculate new element sizes?', answer: 'The relative image resizer works with two scale factors: the horizontal factor is target width divided by original width (SFx = W_target / W_orig) and the vertical factor is target height divided by original height (SFy = H_target / H_orig). Each element new width is its original width times SFx and its new height is its original height times SFy — the same responsive image dimensions calculator math applied to every asset.' },
+  { question: 'Can I scale multiple image elements at once?', answer: 'Yes. It is a batch element scaling tool — drop one file or dozens into the elements zone and each is measured automatically. This multi-image layout dimension calculator lists every asset with its original dimensions and its new relative dimensions side by side, updating in real time as you change the target size. Copy any single result or remove elements without re-uploading the rest.' },
+  { question: 'Does it keep the aspect ratio when I change one dimension?', answer: 'It can. With the aspect-ratio lock enabled, editing the target width auto-fills a matching target height and vice versa, so the parent frame never distorts — a reliable proportional layout size finder. Unlock it to stretch width and height independently when you want different horizontal and vertical scale factors.' },
+  { question: 'What is the difference between the Mother Image and the chunk elements?', answer: 'The Mother Image is the parent canvas — the full artboard, banner, or bounding box whose size you are changing. The chunk elements are the child assets inside it: buttons, icons, logos, badges. This parent child image resizing web app treats the mother image as the reference frame and every chunk as a dynamic bounding box that must move with it.' },
+  { question: 'Is my image uploaded to a server?', answer: 'No. This UI asset relative scaling tool runs entirely client-side in your browser. Files are read locally with the FileReader and Image APIs and the visual proof is drawn on an in-page canvas — nothing is sent anywhere. That makes this graphic design asset ratio converter and canvas ratio asset calculator safe for confidential mockups and unreleased brand assets.' },
+];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter Relative Image Scaler',
+  applicationCategory: 'DesignApplication',
+  operatingSystem: 'Web',
+  description: 'Free proportional image element scaler. Set a target size for a parent image and get every child element resized by the same ratio in real time — all in the browser.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<BaseLayout
+  title="Relative Image Scaler — Proportional Element Resizer | EMLinter"
+  description="Free proportional image element scaler. Set a parent image target size and get every child element resized by the same ratio in real time. Runs in your browser."
+  keywords="proportional image element scaler, relative image resizer online, batch element scaling tool, canvas ratio asset calculator, responsive image dimensions calculator, parent child image resizing web app, proportional layout size finder, UI asset relative scaling tool, dynamic bounding box resizer, multi-image layout dimension calculator"
+  jsonLd={softwareLd}
+  faqSchema={faqSchema}
+>
+  <RelativeImageScalerPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="The free proportional image element scaler for layouts."
+      intro="Upload a parent image, set a target size, then drop in child elements to get every asset’s new relative dimensions in real time. Runs entirely in your browser."
+      links={[
+        { href: '/tools/svg-to-png', label: 'SVG to PNG' },
+        { href: '/tools/html-minifier', label: 'HTML Minifier' },
+        { href: '/tools', label: 'All Developer Tools' },
+      ]}
+    />
+  </RelativeImageScalerPage>
+</BaseLayout>

@@ -1,0 +1,136 @@
+{
+	"version": 3,
+	"routes": [
+		{
+			"handle": "filesystem"
+		},
+		{
+			"src": "^/_astro/(.*)$",
+			"headers": {
+				"cache-control": "public, max-age=31536000, immutable"
+			},
+			"continue": true
+		},
+		{
+			"src": "^/_server-islands/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/_image/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/404/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/contact-us/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/blog/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/blog/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/faq/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/how-it-works/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/products/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/resources/products/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/sitemap\\.xml$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/solutions/html-email-test/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/solutions/outlook-background-generator/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/solutions/outlook-button-generator/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/solutions/outlook-ready-html/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/solutions/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/templates/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/templates/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/beautify-code/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/code-fix/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/dark-mode-checker/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/design-copier/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/html-minifier/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/relative-image-scaler/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/svg-to-png/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/tools/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/visual-editor/([^/]+?)/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/visual-editor/?$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/$",
+			"dest": "_render"
+		},
+		{
+			"src": "^/.*$",
+			"dest": "_render",
+			"status": 404
+		}
+	]
+}

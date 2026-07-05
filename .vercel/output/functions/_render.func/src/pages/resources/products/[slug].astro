@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductDetailPage from '../../../components/pages/ProductDetailPage';
+import SeoFallback from '../../../components/SeoFallback.astro';
+import { getProductBySlug } from '../../../services/firebase';
+
+const { slug } = Astro.params;
+const SITE_URL = 'https://emlinter.com';
+const canonicalUrl = `${SITE_URL}${Astro.url.pathname.replace(/\/$/, '')}`;
+
+// Fetch server-side so each product page gets a unique, crawlable title/description,
+// Product/SoftwareApplication schema, and FAQ schema in the initial HTML.
+let product = null;
+try {
+  product = await getProductBySlug(slug!);
+} catch (e) {
+  console.error('Product SSR meta fetch failed:', e);
+}
+
+const title = product ? `${product.seoTitle || product.name} | EMLinter` : 'Product | EMLinter';
+const description = product?.seoMetaDescription
+  || product?.shortDescription
+  || 'Explore premium email products and tools built for developers and marketers.';
+const ogImage = product?.thumbnailUrl || undefined;
+const fbHeading = product?.name || 'Premium Email Product';
+const fbIntro = product?.seoMetaDescription || product?.shortDescription
+  || 'Explore this premium email product built for developers and marketers — templates, software, and developer kits that accelerate your email workflow.';
+
+const toIso = (v: any) => { try { return v?.toDate?.().toISOString(); } catch { return undefined; } };
+
+const schemas = [];
+if (product) {
+  schemas.push({
+    '@context': 'https://schema.org',
+    '@type': ['Product', 'SoftwareApplication'],
+    name: product.name,
+    description: product.shortDescription,
+    image: product.thumbnailUrl || `${SITE_URL}/og-default.png`,
+    applicationCategory: product.productType,
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'USD',
+      availability: 'https://schema.org/InStock',
+      url: canonicalUrl,
+    },
+    ...(product.averageRating
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: product.averageRating,
+            reviewCount: product.reviewCount || 1,
+          },
+        }
+      : {}),
+    datePublished: toIso(product.createdAt),
+    dateModified: toIso(product.lastUpdatedAt),
+  });
+  if (product.faq?.length) {
+    schemas.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: product.faq.map((i) => ({
+        '@type': 'Question',
+        name: i.question,
+        acceptedAnswer: { '@type': 'Answer', text: i.answer },
+      })),
+    });
+  }
+}
+const jsonLd = schemas.length ? schemas : undefined;
+---
+<BaseLayout title={title} description={description} ogImage={ogImage} jsonLd={jsonLd}>
+  <ProductDetailPage slug={slug!} client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading={fbHeading}
+      intro={fbIntro}
+      links={[
+        { href: '/resources/products', label: 'All Products' },
+        { href: '/templates', label: 'Free Email Templates' },
+        { href: '/tools', label: 'Developer Tools' },
+      ]}
+    />
+  </ProductDetailPage>
+</BaseLayout>
