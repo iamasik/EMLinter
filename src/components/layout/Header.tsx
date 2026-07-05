@@ -104,9 +104,8 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                 }`}
             >
                 <nav className="container-wide flex items-center justify-between h-16 md:h-20">
-                    <a href="/" className="flex items-center gap-2 group">
-                        <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-accent-500 grid place-items-center font-bold text-white shadow-glow">EM</span>
-                        <span className="text-xl font-display font-bold gradient-text">EMLinter</span>
+                    <a href="/" className="flex items-center group" aria-label="EMLinter — home">
+                        <img src="/logo.svg" alt="EMLinter" width={820} height={200} className="h-8 md:h-9 w-auto transition-transform group-hover:scale-[1.02]" />
                     </a>
 
                     <ul className="hidden lg:flex items-center gap-7">

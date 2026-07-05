@@ -108,9 +108,8 @@ const Footer: React.FC = () => {
                 <div className="container-wide py-14">
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
                         <div className="md:col-span-4">
-                            <a href="/" className="flex items-center gap-2 mb-4">
-                                <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-500 to-accent-500 grid place-items-center font-bold text-white shadow-glow">EM</span>
-                                <span className="text-2xl font-display font-bold gradient-text">EMLinter</span>
+                            <a href="/" className="flex items-center mb-4" aria-label="EMLinter — home">
+                                <img src="/logo.svg" alt="EMLinter" width={820} height={200} className="h-9 w-auto" />
                             </a>
                             <p className="text-sm text-ink-300 mb-4 max-w-sm">
                                 The complete HTML email developer toolkit. Free linter, visual editor, dark-mode tester, and bulletproof Outlook generators — built for marketers, designers, and developers who ship pixel-perfect emails.
