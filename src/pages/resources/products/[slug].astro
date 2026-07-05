@@ -6,7 +6,7 @@ import SeoFallback from '../../../components/SeoFallback.astro';
 import { getProductBySlug } from '../../../services/firebase';
 
 const { slug } = Astro.params;
-const SITE_URL = 'https://emlinter.com';
+const SITE_URL = 'https://www.emlinter.com';
 const canonicalUrl = `${SITE_URL}${Astro.url.pathname.replace(/\/$/, '')}`;
 
 // Fetch server-side so each product page gets a unique, crawlable title/description,

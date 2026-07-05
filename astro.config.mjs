@@ -6,7 +6,7 @@ import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://emlinter.com',
+  site: 'https://www.emlinter.com',
   output: 'server',
   adapter: vercel(),
   integrations: [react(), tailwind()],

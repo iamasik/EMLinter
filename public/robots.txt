@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://emlinter.com/sitemap.xml
+Sitemap: https://www.emlinter.com/sitemap.xml

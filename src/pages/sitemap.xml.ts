@@ -3,7 +3,7 @@ import { getPosts, getTemplates, getProducts } from '../services/firebase';
 
 export const prerender = false;
 
-const SITE_URL = 'https://emlinter.com';
+const SITE_URL = 'https://www.emlinter.com';
 
 /** Static routes with per-page crawl priority + change cadence. */
 const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = [
