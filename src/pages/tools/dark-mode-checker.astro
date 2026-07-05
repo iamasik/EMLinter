@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import DarkModeCheckerPage from '../../components/pages/DarkModeCheckerPage';
+import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is a dark mode email tester and why do I need one?', answer: 'A dark mode email tester simulates how your HTML email renders in dark-mode inboxes — iOS Mail, Apple Mail, Outlook for Mac, and Gmail mobile. Dark mode testing lets you catch and fix invisible logos, unreadable text, and broken CTAs before you send.' },
@@ -22,11 +23,22 @@ const softwareLd = {
 };
 ---
 <BaseLayout
-  title="Dark Mode Email Tester — Free Dark Mode Test for HTML Email | EMLinter"
-  description="Free dark mode email tester. Simulate Apple Mail, Outlook, and Gmail dark mode rendering on your HTML email. Run a full dark mode test, flag WCAG contrast failures, and fix issues before you send."
+  title="Free Dark Mode Email Tester for HTML Email | EMLinter"
+  description="Free dark mode email tester. Simulate Apple Mail, Outlook & Gmail dark-mode rendering, flag WCAG contrast failures, and fix issues before you send."
   keywords="dark mode email tester, dark mode testing, dark mode test, dark mode email, email dark mode, html email dark mode"
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <DarkModeCheckerPage client:only="react" />
+  <DarkModeCheckerPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Catch dark mode rendering bugs before subscribers do."
+      intro="A free dark mode email tester that simulates how Apple Mail, Outlook, and Gmail invert your colors. Run a dark mode test on any HTML email and auto-flag contrast failures — no signup, browser-based."
+      links={[
+        { href: '/tools/code-fix', label: 'HTML Email Linter' },
+        { href: '/tools/design-copier', label: 'Design Copier' },
+        { href: '/tools', label: 'All Developer Tools' },
+      ]}
+    />
+  </DarkModeCheckerPage>
 </BaseLayout>

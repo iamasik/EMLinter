@@ -14,7 +14,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => (
             {product.productType && <span className="absolute top-3 left-3 text-xs bg-pink-600 text-white font-semibold px-2.5 py-1 rounded-full uppercase tracking-wide">{product.productType}</span>}
         </div>
         <div className="p-5 flex flex-col flex-grow">
-            <h3 className="text-lg font-bold text-gray-100 group-hover:text-pink-400 transition-colors mb-2">{product.name}</h3>
+            <h2 className="text-lg font-bold text-gray-100 group-hover:text-pink-400 transition-colors mb-2">{product.name}</h2>
             <p className="text-sm text-gray-400 mb-4 line-clamp-2 flex-grow">{product.shortDescription}</p>
             <div className="flex items-center justify-between pt-4 border-t border-gray-700/50">
                 <div className="flex items-center gap-1 text-sm text-gray-400">

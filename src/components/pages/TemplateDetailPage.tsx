@@ -80,7 +80,7 @@ const TemplateDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
                         </div>
                         <div className="bg-gray-800/50 rounded-b-xl rounded-r-xl border border-gray-700 p-4 shadow-2xl">
                             <div className={`mx-auto bg-white transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full'}`}>
-                                <img src={viewMode === 'mobile' ? template.mobilePreviewUrl : template.desktopPreviewUrl} alt={`${template.title} ${viewMode} preview`} className="w-full h-auto border border-gray-300" />
+                                <img src={viewMode === 'mobile' ? template.mobilePreviewUrl : template.desktopPreviewUrl} alt={`${template.title} ${viewMode} preview`} fetchpriority="high" className="w-full h-auto border border-gray-300" />
                             </div>
                         </div>
                     </div>
@@ -109,11 +109,11 @@ const TemplateDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
                         </div>
                         <div className="space-y-3">
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Industry</h3>
+                                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Industry</h2>
                                 <a href={`/templates?industry=${encodeURIComponent(template.industry)}`} className="text-sm bg-cyan-800/50 text-cyan-300 px-3 py-1 rounded-full hover:bg-cyan-800 transition-colors">{template.industry}</a>
                             </div>
                             <div>
-                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Categories</h3>
+                                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Categories</h2>
                                 <div className="flex flex-wrap gap-2">
                                     {template.categories.map(cat => (
                                         <a key={cat} href={`/templates?category=${encodeURIComponent(cat)}`} className="text-sm bg-gray-700 text-gray-300 px-3 py-1 rounded-full hover:bg-gray-600 transition-colors">{cat}</a>
@@ -130,29 +130,29 @@ const TemplateDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
                             </button>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Ready For</h3>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Ready For</h2>
                             <div className="flex flex-wrap gap-4 items-center">
                                 {template.compatibleESPs.slice(0, 6).map(esp => <span key={esp} className="text-sm text-gray-300">{esp}</span>)}
                                 {template.compatibleESPs.length > 6 && <span className="text-sm text-gray-500">& {template.compatibleESPs.length - 6} more</span>}
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Tested With</h3>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Tested With</h2>
                             <div className="flex gap-4 items-center">
                                 <div className="flex items-center gap-2 text-green-400"><LitmusIcon className="w-6 h-6"/><span className="font-semibold">Litmus</span></div>
                                 <div className="flex items-center gap-2 text-green-400"><EmailOnAcidIcon className="w-6 h-6"/><span className="font-semibold">Email on Acid</span></div>
                             </div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h3>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Description</h2>
                             <p className="text-gray-400 whitespace-pre-line">{template.fullDescription}</p>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Tags</h3>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Tags</h2>
                             <div className="flex flex-wrap gap-2">{template.tags.map(tag => <span key={tag} className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">{tag}</span>)}</div>
                         </div>
                         <div>
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Designer</h3>
+                            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Designer</h2>
                             <p className="text-gray-300 font-semibold">{template.designer}</p>
                         </div>
                     </div>

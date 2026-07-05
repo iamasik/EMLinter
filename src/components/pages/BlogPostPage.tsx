@@ -63,22 +63,8 @@ const BlogPostPage: React.FC<{ slug: string }> = ({ slug }) => {
         fetchPostData();
     }, [slug]);
 
-    useEffect(() => {
-        if (!post) return;
-        const postSchema = {
-            "@context": "https://schema.org", "@type": "BlogPosting",
-            "mainEntityOfPage": { "@type": "WebPage", "@id": window.location.href },
-            "headline": post.title, "image": post.thumbnailUrl || "/favicon.svg",
-            "author": { "@type": "Person", "name": post.author },
-            "publisher": { "@type": "Organization", "name": "EMLinter", "logo": { "@type": "ImageObject", "url": "/favicon.svg" } },
-            "datePublished": post.createdAt.toDate().toISOString(),
-            "dateModified": post.createdAt.toDate().toISOString()
-        };
-        const script = document.createElement('script');
-        script.type = 'application/ld+json'; script.id = 'blog-post-schema'; script.innerHTML = JSON.stringify(postSchema);
-        document.head.appendChild(script);
-        return () => { const s = document.getElementById('blog-post-schema'); if (s) document.head.removeChild(s); };
-    }, [post]);
+    // BlogPosting JSON-LD is emitted server-side in the [slug].astro shell so it is
+    // crawlable in the initial HTML. No client-side schema injection needed here.
 
     const handleVote = async (voteType: 'helpful' | 'not-helpful') => {
         if (votedStatus || isVoting || !post) return;
@@ -129,8 +115,8 @@ const BlogPostPage: React.FC<{ slug: string }> = ({ slug }) => {
                         <span>Published on {formatDate(post.createdAt)}</span>
                     </div>
                 </header>
-                {post.thumbnailUrl && <div className="my-8 rounded-xl overflow-hidden shadow-lg"><img src={post.thumbnailUrl} alt={post.title} className="w-full h-auto object-cover" /></div>}
-                <div className="prose prose-lg max-w-none"><ReactMarkdown rehypePlugins={[rehypeRaw]}>{post.content}</ReactMarkdown></div>
+                {post.thumbnailUrl && <div className="my-8 rounded-xl overflow-hidden shadow-lg"><img src={post.thumbnailUrl} alt={post.title} fetchpriority="high" className="w-full h-auto object-cover" /></div>}
+                <div className="prose prose-lg max-w-none"><ReactMarkdown rehypePlugins={[rehypeRaw]} components={{ h1: 'h2' }}>{post.content}</ReactMarkdown></div>
                 <footer className="mt-12 pt-8 border-t border-gray-700/50">
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Tags</h3>
                     <div className="flex flex-wrap gap-2">{post.tags?.map(tag => <span key={tag} className="text-sm bg-gray-700 text-gray-300 px-3 py-1 rounded-full">#{tag}</span>)}</div>

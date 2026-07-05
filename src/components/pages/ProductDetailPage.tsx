@@ -52,18 +52,18 @@ const ProductDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
         .finally(() => setLoading(false));
     }, [slug]);
 
+    // Product / SoftwareApplication and FAQ JSON-LD are emitted server-side in the
+    // [slug].astro shell (crawlable in the initial HTML). The VideoObject schema stays
+    // client-side since it depends on the demo video embed rendered here.
     useEffect(() => {
-        if (!product) return;
-        const scriptsToRemove: HTMLScriptElement[] = [];
-        const addSchema = (data: object) => {
-            const s = document.createElement('script');
-            s.type = 'application/ld+json'; s.innerHTML = JSON.stringify(data);
-            document.head.appendChild(s); scriptsToRemove.push(s);
-        };
-        addSchema({ "@context": "https://schema.org", "@type": ["Product", "SoftwareApplication"], "name": product.name, "description": product.shortDescription, "image": product.thumbnailUrl, "applicationCategory": product.productType, "operatingSystem": "Web", "offers": { "@type": "Offer", "price": product.price, "priceCurrency": "USD", "availability": "https://schema.org/InStock", "url": window.location.href }, "aggregateRating": product.averageRating ? { "@type": "AggregateRating", "ratingValue": product.averageRating, "reviewCount": product.reviewCount || 1 } : undefined, "datePublished": product.createdAt?.toDate?.().toISOString(), "dateModified": product.lastUpdatedAt?.toDate?.().toISOString() });
-        if (product.demoVideoUrl) { const vid = extractYouTubeId(product.demoVideoUrl); if (vid) addSchema({ "@context": "https://schema.org", "@type": "VideoObject", "name": `${product.name} Demo`, "description": `Watch a demonstration of ${product.name}.`, "thumbnailUrl": `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`, "uploadDate": product.createdAt?.toDate?.().toISOString(), "embedUrl": `https://www.youtube.com/embed/${vid}` }); }
-        if (product.faq?.length) addSchema({ "@context": "https://schema.org", "@type": "FAQPage", "mainEntity": product.faq.map(i => ({ "@type": "Question", "name": i.question, "acceptedAnswer": { "@type": "Answer", "text": i.answer } })) });
-        return () => scriptsToRemove.forEach(s => { try { document.head.removeChild(s); } catch {} });
+        if (!product?.demoVideoUrl) return;
+        const vid = extractYouTubeId(product.demoVideoUrl);
+        if (!vid) return;
+        const s = document.createElement('script');
+        s.type = 'application/ld+json';
+        s.innerHTML = JSON.stringify({ "@context": "https://schema.org", "@type": "VideoObject", "name": `${product.name} Demo`, "description": `Watch a demonstration of ${product.name}.`, "thumbnailUrl": `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg`, "uploadDate": product.createdAt?.toDate?.().toISOString(), "embedUrl": `https://www.youtube.com/embed/${vid}` });
+        document.head.appendChild(s);
+        return () => { try { document.head.removeChild(s); } catch {} };
     }, [product]);
 
     if (loading) return <div className="flex justify-center items-center h-96"><SpinnerIcon className="animate-spin h-10 w-10 text-pink-500" /></div>;
@@ -99,7 +99,7 @@ const ProductDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
                             <iframe src={`https://www.youtube.com/embed/${videoId}`} title={`${product.name} Demo`} frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="absolute top-0 left-0 w-full h-full"></iframe>
                         </div>
                     ) : (
-                        <div className="rounded-xl overflow-hidden shadow-2xl border border-gray-800"><img src={product.thumbnailUrl} alt={product.name} className="w-full h-auto" /></div>
+                        <div className="rounded-xl overflow-hidden shadow-2xl border border-gray-800"><img src={product.thumbnailUrl} alt={product.name} fetchpriority="high" className="w-full h-auto" /></div>
                     )}
                     <section>
                         <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2"><CheckCircleIcon className="w-6 h-6 text-green-400" />Key Features</h2>

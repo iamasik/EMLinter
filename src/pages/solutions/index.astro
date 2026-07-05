@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SolutionsHubPage from '../../components/pages/SolutionsHubPage';
+import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'Why do I need bulletproof Outlook code?', answer: 'Microsoft Outlook for Windows (2007–2024) uses the Word rendering engine, so CSS3 properties like border-radius and modern fonts are ignored. Bulletproof code uses VML as a conditional fallback so the design still renders pixel-perfect.' },
@@ -12,10 +13,22 @@ const faqSchema = [
 ];
 ---
 <BaseLayout
-  title="Bulletproof Outlook Solutions: VML Buttons & Backgrounds | EMLinter"
-  description="Free generators for bulletproof Outlook buttons, VML background images, and HTML sanitizers. Fix rendering issues in Outlook 2007–2024 without breaking Gmail or Apple Mail."
+  title="Bulletproof Outlook Email Solutions | EMLinter"
+  description="Free generators for bulletproof Outlook buttons, VML backgrounds & HTML sanitizers. Fix Outlook 2007–2024 rendering without breaking Gmail or Apple Mail."
   keywords="bulletproof outlook buttons, bulletproof outlook background, vml email, outlook email fix, email rendering issues, outlook compatibility"
   faqSchema={faqSchema}
 >
-  <SolutionsHubPage client:only="react" />
+  <SolutionsHubPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Bulletproof Outlook fixes for the email clients that refuse to play nice."
+      intro="Outlook for Windows still uses Microsoft Word as its rendering engine. Our solutions generate VML fallback code so your buttons, backgrounds, and layouts render identically — in Outlook, Gmail, Apple Mail, and everywhere else."
+      links={[
+        { href: '/solutions/outlook-button-generator', label: 'Outlook Button Generator' },
+        { href: '/solutions/outlook-background-generator', label: 'Outlook Background Generator' },
+        { href: '/solutions/outlook-ready-html', label: 'Outlook HTML Sanitizer' },
+        { href: '/solutions/html-email-test', label: 'HTML Email Test' },
+      ]}
+    />
+  </SolutionsHubPage>
 </BaseLayout>

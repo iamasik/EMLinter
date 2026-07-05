@@ -75,7 +75,7 @@ const ContactUsPage = () => {
                         <div className="relative p-8 h-full rounded-2xl bg-gray-800/50 border border-gray-700/50 overflow-hidden transform transition-transform duration-300 hover:-translate-y-2">
                             <MailIconBg />
                             <div className="relative z-10 flex flex-col h-full">
-                                <h3 className="text-xl font-semibold text-gray-100 mb-2">Contact Us</h3>
+                                <h2 className="text-xl font-semibold text-gray-100 mb-2">Contact Us</h2>
                                 {loading ? (
                                     <div className="flex-grow mb-6 space-y-2 animate-pulse">
                                         <div className="h-4 bg-gray-700 rounded w-3/4"></div>
@@ -104,7 +104,7 @@ const ContactUsPage = () => {
                         <div className="relative p-8 h-full rounded-2xl bg-gray-800/50 border border-gray-700/50 overflow-hidden transform transition-transform duration-300 hover:-translate-y-2">
                             <BriefcaseIconBg />
                             <div className="relative z-10 flex flex-col h-full">
-                                <h3 className="text-xl font-semibold text-gray-100 mb-2">Hire Me</h3>
+                                <h2 className="text-xl font-semibold text-gray-100 mb-2">Hire Me</h2>
                                 <p className="text-gray-400 text-sm mb-6 flex-grow">Looking for a professional developer for your next project? Let's talk.</p>
                                 <button onClick={() => setIsActionModalOpen(true)} className="mt-auto block w-full text-center px-4 py-2.5 font-semibold text-gray-900 bg-cyan-300 rounded-lg hover:bg-cyan-400 transition-colors duration-200">View Offer</button>
                             </div>
@@ -114,7 +114,7 @@ const ContactUsPage = () => {
                         <div className="relative p-8 h-full rounded-2xl bg-gray-800/50 border border-gray-700/50 overflow-hidden transform transition-transform duration-300 hover:-translate-y-2">
                             <PartnershipIcon />
                             <div className="relative z-10 flex flex-col h-full">
-                                <h3 className="text-xl font-semibold text-gray-100 mb-2">Follow Us</h3>
+                                <h2 className="text-xl font-semibold text-gray-100 mb-2">Follow Us</h2>
                                 <p className="text-gray-400 text-sm mb-6 flex-grow">Connect with us on social media for updates and insights.</p>
                                 <div className="mt-auto flex justify-center items-center space-x-6">
                                     <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors" aria-label="Facebook"><FacebookIcon className="w-6 h-6" /></a>

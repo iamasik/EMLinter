@@ -44,10 +44,8 @@ const baseOrganization = {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/favicon.svg`,
-    sameAs: [
-        'https://twitter.com/emlinter',
-        'https://github.com/emlinter',
-    ],
+    // `sameAs` intentionally omitted until real, verified social profiles exist —
+    // linking to unverified/placeholder handles is a weak or misleading entity signal.
 };
 
 const baseWebsite = {
@@ -67,6 +65,30 @@ const userLd: object[] = jsonLd
     ? Array.isArray(jsonLd) ? jsonLd : [jsonLd]
     : [];
 
+// BreadcrumbList schema, auto-derived from the URL path (server-rendered so it is
+// crawlable in the initial HTML). Home is always the first crumb.
+const humanize = (seg: string) =>
+    decodeURIComponent(seg)
+        .replace(/-/g, ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+
+const segments = currentPath.split('/').filter(Boolean);
+const breadcrumbLd = segments.length > 0
+    ? [{
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+            ...segments.map((seg, i) => ({
+                '@type': 'ListItem',
+                position: i + 2,
+                name: humanize(seg),
+                item: `${SITE_URL}/${segments.slice(0, i + 1).join('/')}`,
+            })),
+        ],
+    }]
+    : [];
+
 const faqLd = faqSchema && faqSchema.length > 0
     ? [{
         '@context': 'https://schema.org',
@@ -79,7 +101,7 @@ const faqLd = faqSchema && faqSchema.length > 0
     }]
     : [];
 
-const allLd = [baseOrganization, baseWebsite, ...userLd, ...faqLd];
+const allLd = [baseOrganization, baseWebsite, ...breadcrumbLd, ...userLd, ...faqLd];
 ---
 
 <!doctype html>
@@ -117,7 +139,8 @@ const allLd = [baseOrganization, baseWebsite, ...userLd, ...faqLd];
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImage} />
-        <meta name="twitter:site" content="@emlinter" />
+        {/* twitter:site/creator omitted until a verified @handle exists — a placeholder
+            handle produces a broken/misattributed card. */}
 
         <!-- Preconnect -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />

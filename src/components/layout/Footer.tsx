@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MailIcon, FacebookIcon, TwitterIcon, InstagramIcon, YoutubeIcon } from '../Icons';
+import { MailIcon } from '../Icons';
 import NewsletterModal from '../modals/NewsletterModal';
 import PolicyModal from '../modals/PolicyModal';
 import ActionInfoModal from '../modals/ActionInfoModal';
@@ -124,12 +124,9 @@ const Footer: React.FC = () => {
                                     Hire Me
                                 </button>
                             </div>
-                            <div className="flex items-center gap-3 text-ink-300">
-                                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="hover:text-brand-400 transition-colors"><TwitterIcon className="w-5 h-5" /></a>
-                                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-brand-400 transition-colors"><FacebookIcon className="w-5 h-5" /></a>
-                                <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:text-brand-400 transition-colors"><InstagramIcon className="w-5 h-5" /></a>
-                                <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="hover:text-brand-400 transition-colors"><YoutubeIcon className="w-5 h-5" /></a>
-                            </div>
+                            {/* Social profile links removed until real, verified EMLinter
+                                profiles exist — placeholder links to platform homepages hurt
+                                brand/entity signals and send link equity nowhere useful. */}
                         </div>
 
                         <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-8">

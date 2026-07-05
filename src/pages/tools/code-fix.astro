@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import CodeFixPage from '../../components/pages/CodeFixPage';
+import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What does an HTML email linter check for?', answer: 'A purpose-built HTML email linter checks for unclosed and mismatched tags, broken table nesting, missing alt attributes on images, missing role="presentation" on layout tables, and Outlook-specific bugs like div inside td or unsupported CSS.' },
@@ -22,11 +23,23 @@ const softwareLd = {
 };
 ---
 <BaseLayout
-  title="HTML Email Linter — Free Code Validator for Outlook & Gmail | EMLinter"
-  description="Free HTML email linter built for email clients, not browsers. Catch unclosed tags, broken table nesting, and Outlook-specific rendering bugs in one click. Runs entirely in your browser."
+  title="Free HTML Email Linter & Code Validator | EMLinter"
+  description="Free HTML email linter built for inboxes, not browsers. Catch unclosed tags, broken table nesting & Outlook rendering bugs in one click."
   keywords="html email linter, html email validator, email html validator, html email code validator, outlook html validator"
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <CodeFixPage client:only="react" />
+  <CodeFixPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Find broken tags before Outlook does."
+      intro="A free HTML email linter that catches the bugs only email clients care about — unclosed tags, broken table nesting, and Outlook-specific rendering traps. Paste your HTML, get a line-by-line breakdown."
+      links={[
+        { href: '/tools/beautify-code', label: 'HTML Email Beautifier' },
+        { href: '/tools/html-minifier', label: 'HTML Minifier' },
+        { href: '/tools/dark-mode-checker', label: 'Dark Mode Tester' },
+        { href: '/tools', label: 'All Developer Tools' },
+      ]}
+    />
+  </CodeFixPage>
 </BaseLayout>

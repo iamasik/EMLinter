@@ -13,13 +13,13 @@ const formatDate = (timestamp: any): string => {
 const PostCard: React.FC<{ post: Post }> = ({ post }) => (
     <a href={`/resources/blog/${post.slug}`} className="group flex flex-col rounded-xl bg-gray-800/50 border border-gray-700/50 overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-pink-500/50">
         <div className="relative w-full h-48 overflow-hidden">
-            <img src={post.thumbnailUrl || 'https://via.placeholder.com/600x400/1F2937/FFFFFF?text=EMLinter'} alt={post.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            <img src={post.thumbnailUrl || 'https://via.placeholder.com/600x400/1F2937/FFFFFF?text=EMLinter'} alt={post.title} loading="lazy" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
             {post.categories?.[0] && <span className="absolute top-3 left-3 text-xs bg-pink-600 text-white font-semibold px-2.5 py-1 rounded-full">{post.categories[0]}</span>}
         </div>
         <div className="p-5 flex flex-col flex-grow">
             <p className="text-xs text-gray-400 mb-2">By <span className="font-semibold text-gray-300">{post.author}</span> &bull; {formatDate(post.createdAt)}</p>
-            <h3 className="text-lg font-bold text-gray-100 group-hover:text-pink-400 transition-colors flex-grow min-h-[3.5rem]">{post.title}</h3>
+            <h2 className="text-lg font-bold text-gray-100 group-hover:text-pink-400 transition-colors flex-grow min-h-[3.5rem]">{post.title}</h2>
             <p className="text-sm text-gray-400 mt-2">{post.seoMetaDescription}</p>
             <div className="mt-4 pt-4 border-t border-gray-700/50 flex flex-wrap gap-2">
                 {post.tags?.slice(0, 3).map(tag => <span key={tag} className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded-full">#{tag}</span>)}

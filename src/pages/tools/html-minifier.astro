@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HtmlMinifierPage from '../../components/pages/HtmlMinifierPage';
+import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is an HTML email minifier and why do I need one?', answer: 'An HTML email minifier compresses your email\'s HTML by removing comments, line breaks, and unnecessary whitespace without changing how the email renders. Gmail clips any email over 102KB, so minifying brings you under the limit and improves load time.' },
@@ -22,11 +23,22 @@ const softwareLd = {
 };
 ---
 <BaseLayout
-  title="HTML Email Minifier — Free Minify HTML Online Tool | EMLinter"
-  description="Free HTML email minifier built for email developers. Minify html, compress html, and reduce file size 20–45% to slide under Gmail's 102KB clip without breaking Outlook fallbacks or inline styles."
+  title="HTML Email Minifier — Free Minify HTML Tool | EMLinter"
+  description="Free HTML email minifier. Minify and compress HTML 20–45% to slip under Gmail's 102KB clip without breaking Outlook fallbacks or inline styles."
   keywords="html email minifier, html minifier, minify html, compress html, minify html online, minify code"
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <HtmlMinifierPage client:only="react" />
+  <HtmlMinifierPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Compress HTML to slip under Gmail's 102KB clip."
+      intro="A free online html email minifier built for email developers. Minify html, compress html, and shrink your campaign 20–45% in one click — without breaking Outlook fallbacks or inline styles."
+      links={[
+        { href: '/tools/beautify-code', label: 'HTML Email Beautifier' },
+        { href: '/tools/code-fix', label: 'HTML Email Linter' },
+        { href: '/tools', label: 'All Developer Tools' },
+      ]}
+    />
+  </HtmlMinifierPage>
 </BaseLayout>

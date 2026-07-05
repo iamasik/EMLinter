@@ -1,7 +1,19 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProductsPage from '../../../components/pages/ProductsPage';
+import SeoFallback from '../../../components/SeoFallback.astro';
 ---
-<BaseLayout title="Premium Email Products & Tools | EMLinter" description="Discover top-tier email templates, software, and developer kits to accelerate your workflow.">
-  <ProductsPage client:only="react" />
+<BaseLayout title="Premium Email Products & Developer Tools | EMLinter" description="Discover premium HTML email templates, software, and developer kits built to accelerate your email workflow — from ready-to-ship designs to time-saving tooling.">
+  <ProductsPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Premium Tools & Products"
+      intro="Supercharge your email workflow with our curated collection of professional templates, components, and developer tools."
+      links={[
+        { href: '/templates', label: 'Free Email Templates' },
+        { href: '/tools', label: 'Developer Tools' },
+        { href: '/resources/blog', label: 'Blog' },
+      ]}
+    />
+  </ProductsPage>
 </BaseLayout>

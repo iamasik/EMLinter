@@ -830,7 +830,7 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         <div className="flex flex-col items-center md:items-start">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="bg-violet-900/50 p-2 rounded-full"><InfoIcon className="w-5 h-5 text-violet-400" /></div>
-                                <h4 className="font-semibold text-gray-200">Editable Templates</h4>
+                                <h2 className="font-semibold text-gray-200">Editable Templates</h2>
                             </div>
                             <p className="text-sm text-gray-400 flex-grow mb-3">Learn how to add classes to make your HTML editable.</p>
                             <button onClick={() => setIsInstructionsModalOpen(true)} className="text-sm text-pink-400 hover:underline font-semibold mt-auto">View Instructions &rarr;</button>
@@ -840,7 +840,7 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         <div className="flex flex-col items-center md:items-start">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="bg-yellow-900/50 p-2 rounded-full"><AlertTriangleIcon className="w-5 h-5 text-yellow-400" /></div>
-                                <h4 className="font-semibold text-gray-200">Data & Privacy</h4>
+                                <h2 className="font-semibold text-gray-200">Data & Privacy</h2>
                             </div>
                             <p className="text-sm text-gray-400 flex-grow mb-3">This tool runs in-browser. We don't store your code.</p>
                             <button onClick={() => setIsPrivacyModalOpen(true)} className="text-sm text-pink-400 hover:underline font-semibold mt-auto">View Note &rarr;</button>
@@ -850,7 +850,7 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         <div className="flex flex-col items-center md:items-start">
                             <div className="flex items-center gap-3 mb-2">
                                 <div className="bg-green-900/50 p-2 rounded-full"><BriefcaseIcon className="w-5 h-5 text-green-400" /></div>
-                                <h4 className="font-semibold text-gray-200">Need Pro Help?</h4>
+                                <h2 className="font-semibold text-gray-200">Need Pro Help?</h2>
                             </div>
                             <p className="text-sm text-gray-400 flex-grow mb-3">Hire a professional to make your email fully compatible.</p>
                             <button onClick={() => setIsFiverrModalOpen(true)} className="text-sm text-pink-400 hover:underline font-semibold mt-auto">View Offer &rarr;</button>

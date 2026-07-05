@@ -2,9 +2,63 @@
 export const prerender = false;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TemplateDetailPage from '../../components/pages/TemplateDetailPage';
+import SeoFallback from '../../components/SeoFallback.astro';
+import { getTemplateBySlug } from '../../services/firebase';
 
 const { slug } = Astro.params;
+const SITE_URL = 'https://emlinter.app';
+
+// Fetch server-side so each template page gets a unique, crawlable title/description
+// and structured data in the initial HTML.
+let template = null;
+try {
+  template = await getTemplateBySlug(slug!);
+} catch (e) {
+  console.error('Template SSR meta fetch failed:', e);
+}
+
+// Keep the title ≤ 60 chars: a full descriptive suffix ("— Free HTML Email
+// Template") plus most real titles overflows, so use the minimal brand suffix.
+const title = template ? `${template.title} | EMLinter` : 'Free HTML Email Template | EMLinter';
+const description = template?.seoMetaDescription
+  || 'View, edit, and download this responsive HTML email template — tested across Gmail, Outlook, and Apple Mail.';
+const ogImage = template?.desktopPreviewUrl || undefined;
+const fbHeading = template?.title || 'Free HTML Email Template';
+const fbIntro = template?.seoMetaDescription || template?.fullDescription
+  || 'View, edit, and download this responsive HTML email template — tested across Gmail, Outlook, and Apple Mail. Open it in the free visual editor and export clean HTML for any ESP.';
+
+const jsonLd = template
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      name: template.title,
+      description: template.seoMetaDescription || template.fullDescription,
+      image: template.desktopPreviewUrl || `${SITE_URL}/og-default.png`,
+      creator: { '@type': 'Person', name: template.designer },
+      keywords: template.tags?.join(', '),
+      ...(template.averageRating && template.numberOfRatings
+        ? {
+            aggregateRating: {
+              '@type': 'AggregateRating',
+              ratingValue: template.averageRating,
+              ratingCount: template.numberOfRatings,
+            },
+          }
+        : {}),
+    }
+  : undefined;
 ---
-<BaseLayout title="Email Template | EMLinter" description="View and download this HTML email template.">
-  <TemplateDetailPage slug={slug!} client:only="react" />
+<BaseLayout title={title} description={description} ogImage={ogImage} jsonLd={jsonLd}>
+  <TemplateDetailPage slug={slug!} client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading={fbHeading}
+      intro={fbIntro}
+      links={[
+        { href: '/templates', label: 'All Email Templates' },
+        { href: '/visual-editor', label: 'Visual Editor' },
+        { href: '/tools/code-fix', label: 'HTML Email Linter' },
+      ]}
+    />
+  </TemplateDetailPage>
 </BaseLayout>

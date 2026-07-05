@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import OutlookBackgroundGeneratorPage from '../../components/pages/OutlookBackgroundGeneratorPage';
+import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is a bulletproof Outlook background and why do I need one?', answer: 'A bulletproof Outlook background renders identically across every Microsoft Outlook version, including the Word-rendered Outlook 2007–2024 for Windows that ignores standard CSS background-image. The technique wraps your image in VML so Outlook reads it, while every other client uses the regular CSS path.' },
@@ -22,11 +23,22 @@ const softwareLd = {
 };
 ---
 <BaseLayout
-  title="Bulletproof Outlook Background Generator — Free VML Email Background | EMLinter"
-  description="Free bulletproof Outlook background generator with VML fallback. Build email background images that render identically in Outlook 2007–2024, Gmail, and Apple Mail — copy production-ready code in one click."
+  title="Bulletproof Outlook Background Generator | EMLinter"
+  description="Free VML background generator. Build email background images that render identically in Outlook 2007–2024, Gmail & Apple Mail — copy code in one click."
   keywords="bulletproof outlook background, bulletproof background, email background, background image in email, html email background image, background for email"
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <OutlookBackgroundGeneratorPage client:only="react" />
+  <OutlookBackgroundGeneratorPage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Generate a bulletproof Outlook background in seconds."
+      intro="Free generator for bulletproof email backgrounds with VML fallback. Drop in an html email background image, get production-ready code that renders identically in Outlook 2007–2024, Gmail, Apple Mail, and every other client."
+      links={[
+        { href: '/solutions/outlook-button-generator', label: 'Outlook Button Generator' },
+        { href: '/solutions/outlook-ready-html', label: 'Outlook HTML Sanitizer' },
+        { href: '/solutions', label: 'All Outlook Solutions' },
+      ]}
+    />
+  </OutlookBackgroundGeneratorPage>
 </BaseLayout>
