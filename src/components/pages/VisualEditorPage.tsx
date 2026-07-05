@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { InfoIcon, CodeIcon, DownloadIcon, AlertTriangleIcon, SaveIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, DesktopIcon, MobileIcon, ImageIcon, BriefcaseIcon, CloseIcon, UploadIcon, ChevronUpIcon, ChevronDownIcon, CopyIcon, SunIcon, MoonIcon, ChatAltIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon } from '../Icons';
+import { InfoIcon, CodeIcon, DownloadIcon, AlertTriangleIcon, SaveIcon, SpinnerIcon, CheckCircleIcon, TrashIcon, DesktopIcon, MobileIcon, ImageIcon, BriefcaseIcon, CloseIcon, UploadIcon, ChevronUpIcon, ChevronDownIcon, CopyIcon, SunIcon, MoonIcon, ChatAltIcon, ArrowUturnLeftIcon, ArrowUturnRightIcon, MobileCssIcon } from '../Icons';
 import UploadHtmlModal from '../modals/UploadHtmlModal';
 import InstructionsModal from '../modals/InstructionsModal';
 import CodeViewModal from '../modals/CodeViewModal';
@@ -7,6 +7,7 @@ import ImageEditModal from '../modals/ImageEditModal';
 import TextAndStyleEditModal from '../modals/TextAndStyleEditModal';
 import BackgroundEditModal from '../modals/BackgroundEditModal';
 import PreviewTextModal from '../modals/PreviewTextModal';
+import ResponsiveCssModal from '../modals/ResponsiveCssModal';
 import { getTemplateBySlug } from '../../services/firebase';
 import ActionInfoModal from '../modals/ActionInfoModal';
 
@@ -63,6 +64,7 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
     const [isTextAndStyleModalOpen, setIsTextAndStyleModalOpen] = useState(false);
     const [isBackgroundModalOpen, setIsBackgroundModalOpen] = useState(false);
     const [isPreviewTextModalOpen, setIsPreviewTextModalOpen] = useState(false);
+    const [isResponsiveCssModalOpen, setIsResponsiveCssModalOpen] = useState(false);
     const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
     const [isFiverrModalOpen, setIsFiverrModalOpen] = useState(false);
     
@@ -319,6 +321,11 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
     const handlePreviewTextSave = (newHtml: string) => {
         setTemplateHtml(newHtml);
         setIsPreviewTextModalOpen(false);
+    };
+
+    const handleResponsiveCssSave = (newHtml: string) => {
+        setTemplateHtml(newHtml);
+        setIsResponsiveCssModalOpen(false);
     };
 
     useEffect(() => {
@@ -808,6 +815,12 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                 htmlContent={templateHtml}
                 onSave={handlePreviewTextSave}
             />
+             <ResponsiveCssModal
+                isOpen={isResponsiveCssModalOpen}
+                onClose={() => setIsResponsiveCssModalOpen(false)}
+                htmlContent={templateHtml}
+                onSave={handleResponsiveCssSave}
+            />
              <PrivacyInfoModal isOpen={isPrivacyModalOpen} onClose={() => setIsPrivacyModalOpen(false)} />
              <ActionInfoModal
                 isOpen={isFiverrModalOpen}
@@ -898,6 +911,14 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                                     >
                                         <ChatAltIcon className="w-5 h-5"/>
                                         <span className="hidden sm:inline">Preview Text</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setIsResponsiveCssModalOpen(true)}
+                                        className="bg-gray-700 rounded-md px-4 py-2 text-sm font-semibold text-gray-300 hover:bg-gray-600 transition-colors flex items-center gap-2"
+                                        title="Edit Mobile Styles"
+                                    >
+                                        <MobileCssIcon className="w-5 h-5"/>
+                                        <span className="hidden sm:inline">Mobile Styles</span>
                                     </button>
                                     <button
                                         onClick={() => setIsCodeModalOpen(true)}
