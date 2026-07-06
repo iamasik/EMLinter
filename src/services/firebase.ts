@@ -16,9 +16,13 @@ const firebaseConfig = {
   appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
 };
 
+// Never throw here: this module is imported by client-only islands (e.g. AnnouncementBar).
+// A throw at module-eval crashes the island before any React .catch() can run, which can
+// blank chrome (header/footer). Warn instead and let network calls fail gracefully — the
+// callers already .catch() their reads.
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  throw new Error(
-    "Firebase config missing. Set PUBLIC_FIREBASE_* vars in .env (see .env.example)."
+  console.warn(
+    "Firebase config missing (PUBLIC_FIREBASE_* env vars). DB-backed features will be disabled. See .env.example."
   );
 }
 
