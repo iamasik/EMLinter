@@ -3,14 +3,24 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs, query, where, limit, doc, getDoc, runTransaction, orderBy, updateDoc, increment } from "firebase/firestore";
 import type { Template, VideoGuide, Post, Expert, AppSettings, Product } from '../types';
 
+// Firebase web config lives in env (PUBLIC_-prefixed so it is available both client-side
+// and in the server-side detail shells / sitemap that also call these getters).
+// These are public identifiers, not secrets — access control is enforced by Firestore
+// Security Rules. See .env.example for the required keys.
 const firebaseConfig = {
-  apiKey: "AIzaSyD-Rqi0np7SQun_B7oo0LdHsIUVynbaeP4",
-  authDomain: "emlinter.firebaseapp.com",
-  projectId: "emlinter",
-  storageBucket: "emlinter.appspot.com",
-  messagingSenderId: "921309098896",
-  appId: "1:921309098896:web:ad1f4e1a4164ea5a2ab915"
+  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
+  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
 };
+
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  throw new Error(
+    "Firebase config missing. Set PUBLIC_FIREBASE_* vars in .env (see .env.example)."
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
