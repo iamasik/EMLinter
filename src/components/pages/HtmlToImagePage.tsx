@@ -4,6 +4,8 @@ import {
     DownloadIcon,
     CodeIcon,
     ImageIcon,
+    DesktopIcon,
+    MobileIcon,
 } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
@@ -78,6 +80,13 @@ p  { margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #e9d5ff; }
 
 type EditorTab = 'html' | 'css';
 type Format = 'png' | 'jpg';
+type Viewport = 'mobile' | 'desktop';
+
+// Width the iframe/export viewport is forced to in desktop mode. Wide enough that
+// any typical mobile media query (max-width: 480–640px) never matches, so the
+// email renders its desktop layout. The body shrink-wraps (display:inline-block)
+// to the email's real width, which is what we crop the export to.
+const DESKTOP_VW = 1280;
 
 // Orphan table elements (a bare <tr>, <td>, <tbody>… pasted without a wrapping
 // <table>) are silently dropped by the HTML parser, so they'd never render or
@@ -97,16 +106,24 @@ function wrapFragment(html: string): string {
 }
 
 // Build a full document for the live iframe preview.
-function buildSrcDoc(html: string, css: string): string {
+// - mobile: body shrink-wraps to the content (display:inline-block), and the
+//   iframe element width drives the viewport, so mobile media queries fire.
+// - desktop: body is a wide fixed-width block so max-width breakpoints never
+//   match; a centered email (margin:auto / align=center) still centers within it.
+function buildSrcDoc(html: string, css: string, viewport: Viewport): string {
+    const bodyStyle =
+        viewport === 'desktop'
+            ? `width:${DESKTOP_VW}px;`
+            : `display:inline-block;`;
     return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
 <style>
   html,body { margin:0; }
-  body { display:inline-block; }
-  ${css}
+  body { ${bodyStyle} }
 </style>
+<style>${css}</style>
 </head>
 <body>${wrapFragment(html)}</body>
 </html>`;
@@ -115,6 +132,42 @@ function buildSrcDoc(html: string, css: string): string {
 // Count lines for the gutter.
 function lineCount(text: string): number {
     return Math.max(1, text.split('\n').length);
+}
+
+// Measure the real content bounding box inside the preview document.
+// In desktop mode the body is 1280px wide but the email itself is usually a
+// narrower table centered inside it — so we take the union of the direct
+// children's rects to find the actual left edge and width to crop to. In mobile
+// mode the body already shrink-wraps, so scrollWidth/Height is exact.
+function contentBox(
+    doc: Document,
+    viewport: Viewport
+): { x: number; y: number; w: number; h: number } {
+    const body = doc.body;
+    if (viewport === 'mobile') {
+        return { x: 0, y: 0, w: Math.max(body.scrollWidth, 1), h: Math.max(body.scrollHeight, 1) };
+    }
+    let left = Infinity;
+    let right = -Infinity;
+    let bottom = -Infinity;
+    const kids = Array.from(body.children) as HTMLElement[];
+    for (const el of kids) {
+        const r = el.getBoundingClientRect();
+        if (r.width === 0 && r.height === 0) continue;
+        left = Math.min(left, r.left);
+        right = Math.max(right, r.right);
+        bottom = Math.max(bottom, r.bottom);
+    }
+    if (!isFinite(left)) {
+        // no measurable children — fall back to the full body
+        return { x: 0, y: 0, w: Math.max(body.scrollWidth, 1), h: Math.max(body.scrollHeight, 1) };
+    }
+    return {
+        x: Math.max(0, Math.floor(left)),
+        y: 0,
+        w: Math.max(1, Math.ceil(right - left)),
+        h: Math.max(1, Math.ceil(bottom)),
+    };
 }
 
 function blobToDataUri(blob: Blob): Promise<string | null> {
@@ -158,34 +211,48 @@ const HtmlToImagePage: React.FC = () => {
     const [tab, setTab] = useState<EditorTab>('html');
     const [format, setFormat] = useState<Format>('png');
     const [scale, setScale] = useState<number>(2);
+    const [viewport, setViewport] = useState<Viewport>('mobile');
     const [exporting, setExporting] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
+    const [dims, setDims] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+    const [previewScale, setPreviewScale] = useState<number>(1);
 
     const htmlFileRef = useRef<HTMLInputElement>(null);
     const cssFileRef = useRef<HTMLInputElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const previewWrapRef = useRef<HTMLDivElement>(null);
     const htmlAreaRef = useRef<HTMLTextAreaElement>(null);
     const cssAreaRef = useRef<HTMLTextAreaElement>(null);
     const htmlGutterRef = useRef<HTMLDivElement>(null);
     const cssGutterRef = useRef<HTMLDivElement>(null);
 
     // realtime preview document (debounced lightly so fast typing stays smooth)
-    const [srcDoc, setSrcDoc] = useState<string>(() => buildSrcDoc(DEFAULT_HTML, DEFAULT_CSS));
+    const [srcDoc, setSrcDoc] = useState<string>(() => buildSrcDoc(DEFAULT_HTML, DEFAULT_CSS, 'mobile'));
     useEffect(() => {
-        const id = window.setTimeout(() => setSrcDoc(buildSrcDoc(htmlCode, cssCode)), 200);
+        const id = window.setTimeout(() => setSrcDoc(buildSrcDoc(htmlCode, cssCode, viewport)), 200);
         return () => window.clearTimeout(id);
-    }, [htmlCode, cssCode]);
+    }, [htmlCode, cssCode, viewport]);
 
     // measure the rendered content whenever the preview reloads / resizes
     const measure = useCallback(() => {
         const doc = iframeRef.current?.contentDocument;
         if (!doc?.body) return;
-        const el = doc.body;
-        const w = Math.max(el.scrollWidth, 1);
-        const h = Math.max(el.scrollHeight, 1);
-        setDims({ w, h });
-    }, []);
+        const box = contentBox(doc, viewport);
+        setDims(box);
+        // Fit the visible content box into the panel width. The iframe stays
+        // DESKTOP_VW wide internally (so the desktop layout is triggered) — this
+        // outer scale is purely visual and doesn't affect its media queries. We
+        // crop to the content box, so fit against box.w, not the full viewport.
+        const avail = (previewWrapRef.current?.clientWidth ?? box.w) - 24; // panel padding
+        setPreviewScale(box.w > avail ? avail / box.w : 1);
+    }, [viewport]);
+
+    // re-measure when the panel resizes (desktop fit depends on panel width)
+    useEffect(() => {
+        const onResize = () => measure();
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, [measure]);
 
     const activeCode = tab === 'html' ? htmlCode : cssCode;
     const activeLines = useMemo(() => lineCount(activeCode), [activeCode]);
@@ -221,8 +288,13 @@ const HtmlToImagePage: React.FC = () => {
             setError('Preview is not ready yet. Try again in a moment.');
             return;
         }
-        const w = Math.max(doc.body.scrollWidth, 1);
-        const h = Math.max(doc.body.scrollHeight, 1);
+        // Re-measure the live preview so the export matches exactly what's on screen.
+        const box = contentBox(doc, viewport);
+        // The foreignObject's media queries evaluate against ITS width. To keep the
+        // desktop layout we render it at the full desktop viewport width, then crop
+        // the canvas back to the email's real content box (box.x / box.w).
+        const svgW = viewport === 'desktop' ? DESKTOP_VW : box.w;
+        const svgH = box.h;
 
         setExporting(true);
 
@@ -235,7 +307,10 @@ const HtmlToImagePage: React.FC = () => {
             host.appendChild(styleEl);
         }
         const content = document.createElement('div');
-        content.setAttribute('style', 'display:inline-block;');
+        content.setAttribute(
+            'style',
+            viewport === 'desktop' ? `width:${DESKTOP_VW}px;` : 'display:inline-block;'
+        );
         content.innerHTML = wrapFragment(htmlCode);
         host.appendChild(content);
 
@@ -265,24 +340,30 @@ const HtmlToImagePage: React.FC = () => {
         }
 
         const svg =
-            `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">` +
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}">` +
             `<foreignObject x="0" y="0" width="100%" height="100%">${serialized}</foreignObject>` +
             `</svg>`;
 
         const img = new Image();
         img.onload = () => {
             try {
+                // Output only the email's real content box, cropping any empty
+                // canvas either side of a centered desktop layout.
                 const canvas = document.createElement('canvas');
-                canvas.width = Math.round(w * scale);
-                canvas.height = Math.round(h * scale);
+                canvas.width = Math.round(box.w * scale);
+                canvas.height = Math.round(box.h * scale);
                 const ctx = canvas.getContext('2d');
                 if (!ctx) throw new Error('no-ctx');
                 if (format === 'jpg') {
                     ctx.fillStyle = '#ffffff'; // JPG has no alpha channel
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
-                ctx.setTransform(scale, 0, 0, scale, 0, 0);
-                ctx.drawImage(img, 0, 0);
+                // crop (box.x, box.y, box.w, box.h) from the rendered SVG and scale up
+                ctx.drawImage(
+                    img,
+                    box.x, box.y, box.w, box.h,
+                    0, 0, canvas.width, canvas.height
+                );
                 const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
                 canvas.toBlob(
                     (blob) => {
@@ -321,7 +402,7 @@ const HtmlToImagePage: React.FC = () => {
             setError('Could not render this HTML to an image. Check that the markup is valid.');
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    }, [htmlCode, cssCode, scale, format]);
+    }, [htmlCode, cssCode, scale, format, viewport]);
 
     const clearAll = () => {
         setHtmlCode('');
@@ -459,23 +540,71 @@ const HtmlToImagePage: React.FC = () => {
                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-ink-950/40">
                             <ImageIcon className="w-4 h-4 text-ink-300" />
                             <span className="text-sm font-semibold text-white">Live preview</span>
+
+                            {/* viewport toggle */}
+                            <div className="ml-auto inline-flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewport('mobile')}
+                                    title="Mobile view (media queries active)"
+                                    aria-label="Mobile view"
+                                    aria-pressed={viewport === 'mobile'}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                                        viewport === 'mobile' ? 'bg-white/10 text-white' : 'text-ink-300 hover:text-white'
+                                    }`}
+                                >
+                                    <MobileIcon className="w-4 h-4" /> Mobile
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewport('desktop')}
+                                    title="Desktop view (ignores mobile media queries)"
+                                    aria-label="Desktop view"
+                                    aria-pressed={viewport === 'desktop'}
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
+                                        viewport === 'desktop' ? 'bg-white/10 text-white' : 'text-ink-300 hover:text-white'
+                                    }`}
+                                >
+                                    <DesktopIcon className="w-4 h-4" /> Desktop
+                                </button>
+                            </div>
+
                             {dims && (
-                                <span className="ml-auto text-xs text-ink-500 font-mono tabular-nums">
+                                <span className="text-xs text-ink-500 font-mono tabular-nums">
                                     {dims.w} × {dims.h} px
                                 </span>
                             )}
                         </div>
 
                         {/* preview surface (checkered so transparency is visible) */}
-                        <div className="relative flex-grow min-h-[300px] bg-checker overflow-auto custom-scrollbar">
-                            <iframe
-                                ref={iframeRef}
-                                title="HTML preview"
-                                srcDoc={srcDoc}
-                                sandbox="allow-same-origin"
-                                onLoad={measure}
-                                className="w-full h-full min-h-[300px] border-0 bg-transparent"
-                            />
+                        <div
+                            ref={previewWrapRef}
+                            className="relative flex-grow min-h-[300px] bg-checker overflow-auto custom-scrollbar flex items-start justify-center p-3"
+                        >
+                            {/* stage: sized to the scaled content box, crops empty canvas around a centered desktop layout */}
+                            <div
+                                className="relative overflow-hidden"
+                                style={{
+                                    width: dims ? dims.w * previewScale : '100%',
+                                    height: dims ? dims.h * previewScale : undefined,
+                                }}
+                            >
+                                <iframe
+                                    ref={iframeRef}
+                                    title="HTML preview"
+                                    srcDoc={srcDoc}
+                                    sandbox="allow-same-origin"
+                                    onLoad={measure}
+                                    scrolling="no"
+                                    style={{
+                                        width: viewport === 'desktop' ? DESKTOP_VW : (dims ? dims.w : '100%'),
+                                        height: dims ? dims.h : '100%',
+                                        transform: `scale(${previewScale}) translateX(${dims ? -dims.x : 0}px)`,
+                                        transformOrigin: 'top left',
+                                    }}
+                                    className="border-0 bg-transparent"
+                                />
+                            </div>
                         </div>
 
                         {/* export controls */}
