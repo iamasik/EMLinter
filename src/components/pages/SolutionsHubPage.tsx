@@ -1,5 +1,5 @@
 import React from 'react';
-import { LitmusIcon, CursorClickIcon, ImageIcon, CheckCircleIcon } from '../Icons';
+import { LitmusIcon, CursorClickIcon, ImageIcon, CheckCircleIcon, ScaleIcon } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
 
@@ -31,6 +31,13 @@ const solutions = [
         description: 'Send a real test email straight to your own inbox to preview how Gmail, Outlook, and Apple Mail will actually render your campaign.',
         icon: LitmusIcon,
         tone: 'from-sky-500/20 to-sky-500/5 text-sky-300 ring-sky-400/20',
+    },
+    {
+        id: 'pixel-converter',
+        label: 'Pixel Converter',
+        description: 'Convert pixels to CSS units (em, rem, pt, vh) and physical measurements (inch, cm, mm), plus A/B/C/US paper sizes to pixels — with live reference tables.',
+        icon: ScaleIcon,
+        tone: 'from-amber-500/20 to-amber-500/5 text-amber-300 ring-amber-400/20',
     },
 ];
 

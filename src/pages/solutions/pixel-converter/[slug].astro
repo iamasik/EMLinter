@@ -1,0 +1,28 @@
+---
+export const prerender = false;
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PixelConverterPage from '../../../components/pages/PixelConverterPage';
+import { getConverter } from '../../../lib/pixelConverters';
+
+const { slug } = Astro.params;
+const config = slug ? getConverter(slug) : undefined;
+
+// Unknown slug → 404 (the React page also renders a friendly not-found state).
+if (!config) {
+  return new Response(null, { status: 404 });
+}
+
+const faqSchema = config.faqs.map((f) => ({ question: f.question, answer: f.answer }));
+---
+<BaseLayout
+  title={config.metaTitle}
+  description={config.metaDescription}
+  keywords={config.keywords}
+  faqSchema={faqSchema}
+>
+  <PixelConverterPage slug={slug!} client:load />
+  {/* client:load (not client:only): this feature is SSR-safe — static config data,
+      browser APIs only in click handlers — so the full page (converter, reference
+      table, prose, FAQ) is server-rendered into the raw HTML for crawlers, then
+      hydrated for interactivity. No SeoFallback needed. */}
+</BaseLayout>

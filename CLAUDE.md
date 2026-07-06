@@ -110,7 +110,9 @@ section for how detail-page meta is made crawlable despite the `client:only` bod
 
 ## Route map
 
-23 route shells (`src/pages/**/*.astro`) ↔ 23 page components (`src/components/pages/*.tsx`).
+25 route shells (`src/pages/**/*.astro`) ↔ 25 page components (`src/components/pages/*.tsx`). The
+`pixel-converter/[slug]` shell reuses one component (`PixelConverterPage`) across 18 config-driven
+conversions (see `src/lib/pixelConverters.ts`).
 
 | URL                                          | Astro shell                                          | React component                  |
 | -------------------------------------------- | ---------------------------------------------------- | -------------------------------- |
@@ -131,6 +133,8 @@ section for how detail-page meta is made crawlable despite the `client:only` bod
 | `/solutions/outlook-button-generator`        | `pages/solutions/outlook-button-generator.astro`     | `OutlookButtonGeneratorPage`     |
 | `/solutions/outlook-background-generator`    | `pages/solutions/outlook-background-generator.astro` | `OutlookBackgroundGeneratorPage` |
 | `/solutions/outlook-ready-html`              | `pages/solutions/outlook-ready-html.astro`           | `OutlookReadyHtmlPage`           |
+| `/solutions/pixel-converter`                 | `pages/solutions/pixel-converter/index.astro`        | `PixelConverterHubPage`          |
+| `/solutions/pixel-converter/<slug>`          | `pages/solutions/pixel-converter/[slug].astro`       | `PixelConverterPage`             |
 | `/visual-editor`                             | `pages/visual-editor/index.astro`                    | `VisualEditorPage`               |
 | `/visual-editor/<slug>`                      | `pages/visual-editor/[slug].astro`                   | `VisualEditorPage`               |
 | `/resources/blog`                            | `pages/resources/blog/index.astro`                   | `BlogPage`                       |

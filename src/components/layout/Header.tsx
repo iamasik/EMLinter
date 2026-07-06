@@ -75,6 +75,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                 { page: 'solutions/outlook-background-generator', label: 'Outlook Background', description: 'Bulletproof VML background images', icon: <ImageIcon className="w-5 h-5" /> },
                 { page: 'solutions/outlook-button-generator', label: 'Outlook Buttons', description: 'Bulletproof VML email buttons', icon: <CursorClickIcon className="w-5 h-5" /> },
                 { page: 'solutions/outlook-ready-html', label: 'Outlook Fixer', description: 'Fix Outlook spacing and rendering', icon: <CheckCircleIcon className="w-5 h-5" /> },
+                { page: 'solutions/pixel-converter', label: 'Pixel Converter', description: 'px to em, rem, pt, inch, cm & paper', icon: <ScaleIcon className="w-5 h-5" /> },
             ],
         },
         {

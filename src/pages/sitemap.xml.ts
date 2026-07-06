@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getPosts, getTemplates, getProducts } from '../services/firebase';
+import { CONVERTERS, CONVERTER_BASE_PATH } from '../lib/pixelConverters';
 
 export const prerender = false;
 
@@ -22,6 +23,13 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
     { path: '/solutions/outlook-button-generator', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-background-generator', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-ready-html', priority: 0.8, changefreq: 'monthly' },
+    { path: '/solutions/pixel-converter', priority: 0.8, changefreq: 'monthly' },
+    // All pixel-converter conversion pages, derived from the config.
+    ...CONVERTERS.map((c) => ({
+        path: `${CONVERTER_BASE_PATH}/${c.slug}`,
+        priority: 0.7,
+        changefreq: 'monthly',
+    })),
     { path: '/visual-editor', priority: 0.8, changefreq: 'monthly' },
     { path: '/templates', priority: 0.8, changefreq: 'weekly' },
     { path: '/resources/blog', priority: 0.7, changefreq: 'daily' },

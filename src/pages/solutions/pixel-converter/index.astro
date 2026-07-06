@@ -1,0 +1,35 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PixelConverterHubPage from '../../../components/pages/PixelConverterHubPage';
+
+const faqSchema = [
+  { question: 'What is the Pixel Converter?', answer: 'A free, browser-based toolkit for converting pixels into CSS units like em, rem, pt, and vh, plus physical measurements like inches, centimeters, and millimeters — and standard A, B, C, and US paper sizes into pixel dimensions. Every conversion runs instantly on your device.' },
+  { question: 'Why convert pixels to em, rem, or pt?', answer: 'Absolute pixels do not scale with a user’s font-size preference. Converting to relative units like em and rem makes typography accessible and responsive, while pt is the standard unit for print. Each converter shows the exact formula and a reference table.' },
+  { question: 'How accurate are the physical unit conversions?', answer: 'Screen pixels map to physical lengths through a resolution (DPI). CSS uses a 96 pixels-per-inch reference by default, and you can change the DPI for print (150 or 300). At 96 DPI, 1 inch = 96px, 1cm ≈ 37.8px, and 1mm ≈ 3.78px.' },
+  { question: 'What paper sizes can I convert to pixels?', answer: 'The full ISO A series (A0–A10), B series (B0–B10), and C series (C0–C10, for envelopes), plus US sizes including Letter, Legal, Tabloid, Ledger, and the ANSI A–E engineering series. Pick a size and DPI for exact pixel dimensions.' },
+  { question: 'Is the Pixel Converter free and private?', answer: 'Yes — completely free, no signup, and fully private. All conversion math happens client-side in your browser, so no values are ever sent to a server.' },
+];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter Pixel Converter',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'Free online pixel converter for CSS units (em, rem, pt, vh), physical units (inch, cm, mm), and A/B/C/US paper sizes — all in the browser.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<BaseLayout
+  title="Pixel Converter — px to em, rem, pt, inch, cm & Paper | EMLinter"
+  description="Free pixel converter for CSS. Convert px to em, rem, pt, vh, inches, cm, mm, and A/B/C/US paper sizes to pixels — instantly, in your browser, with reference tables."
+  keywords="pixel converter, px to em, px to rem, px to pt, px to vh, pixels to inches, pixels to cm, pixels to mm, paper size to pixels"
+  jsonLd={softwareLd}
+  faqSchema={faqSchema}
+>
+  <PixelConverterHubPage client:load />
+  {/* client:load (not client:only): this feature is SSR-safe — all data is static
+      config, browser APIs are confined to click handlers — so the full page
+      (grid, prose, FAQ) is server-rendered into the raw HTML for crawlers, then
+      hydrated for interactivity. No SeoFallback needed. */}
+</BaseLayout>
