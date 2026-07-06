@@ -86,6 +86,21 @@ export interface AppSettings {
     socials: SocialLink[];
 }
 
+export type ContactMessageStatus = 'read' | 'unread';
+
+export interface ContactMessage {
+    id?: string;
+    fullName: string;
+    email: string;
+    subject: string;
+    message: string;
+    /** Whether an admin has opened the message. Defaults to 'unread' on creation. */
+    status: ContactMessageStatus;
+    /** Name of the admin who opened the message. Defaults to 'Unassigned' on creation. */
+    openedBy: string;
+    createdAt: Timestamp | any;
+}
+
 export interface MinifyOptions {
     keepHead: boolean;
     keepStyles: boolean;

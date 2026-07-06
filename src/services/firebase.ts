@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, query, where, limit, doc, getDoc, runTransaction, orderBy, updateDoc, increment } from "firebase/firestore";
-import type { Template, VideoGuide, Post, Expert, AppSettings, Product } from '../types';
+import { getFirestore, collection, getDocs, query, where, limit, doc, getDoc, runTransaction, orderBy, updateDoc, increment, addDoc, serverTimestamp } from "firebase/firestore";
+import type { Template, VideoGuide, Post, Expert, AppSettings, Product, ContactMessage } from '../types';
 
 // Firebase web config lives in env (PUBLIC_-prefixed so it is available both client-side
 // and in the server-side detail shells / sitemap that also call these getters).
@@ -138,6 +138,31 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     if (querySnapshot.empty) return null;
     const d = querySnapshot.docs[0];
     return { id: d.id, ...d.data() } as Product;
+}
+
+/**
+ * Persist a contact-form submission to the `contactMessages` collection.
+ * `status` and `openedBy` are seeded with defaults; an admin flips them later
+ * (from the Firebase console or a future admin UI). `createdAt` uses the server
+ * clock so ordering is trustworthy regardless of the client's local time.
+ *
+ * NOTE: this must only be called from the server (see /api/contact) *after*
+ * hCaptcha verification — the API route is the spam gate, not this function.
+ */
+export async function submitContactMessage(
+    data: Pick<ContactMessage, 'fullName' | 'email' | 'subject' | 'message'>
+): Promise<string> {
+    const messagesCol = collection(db, 'contactMessages');
+    const docRef = await addDoc(messagesCol, {
+        fullName: data.fullName,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        status: 'unread' as const,
+        openedBy: 'Unassigned',
+        createdAt: serverTimestamp(),
+    });
+    return docRef.id;
 }
 
 export { db };
