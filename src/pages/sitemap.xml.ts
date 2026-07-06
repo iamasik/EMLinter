@@ -22,7 +22,7 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
     { path: '/solutions/outlook-background-generator', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-ready-html', priority: 0.8, changefreq: 'monthly' },
     { path: '/visual-editor', priority: 0.8, changefreq: 'monthly' },
-    { path: '/templates', priority: 0.9, changefreq: 'weekly' },
+    { path: '/templates', priority: 0.8, changefreq: 'weekly' },
     { path: '/resources/blog', priority: 0.7, changefreq: 'daily' },
     { path: '/resources/products', priority: 0.7, changefreq: 'weekly' },
     { path: '/resources/how-it-works', priority: 0.6, changefreq: 'monthly' },
