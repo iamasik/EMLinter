@@ -56,6 +56,7 @@ const navColumns = [
             { href: '/tools/design-copier', label: 'Design Copier' },
             { href: '/tools/svg-to-png', label: 'SVG to PNG' },
             { href: '/tools/relative-image-scaler', label: 'Relative Image Scaler' },
+            { href: '/tools/html-to-image', label: 'HTML to Image' },
         ],
     },
     {

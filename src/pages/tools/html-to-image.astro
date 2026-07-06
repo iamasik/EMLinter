@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HtmlToImagePage from '../../components/pages/HtmlToImagePage';
+import SeoFallback from '../../components/SeoFallback.astro';
+
+const faqSchema = [
+  { question: 'How do I convert HTML to an image online?', answer: 'Paste your markup into the code box on the left, or upload an .html file. The panel on the right renders a live preview instantly — no button to click. When it looks right, choose PNG or JPG, pick a scale from 1x to 4x, and download. This HTML to image converter draws your rendered page onto a canvas in the browser, so nothing is uploaded to a server.' },
+  { question: 'Can I add my own CSS when I convert HTML to PNG?', answer: 'Yes. Switch to the CSS tab on the left and paste your stylesheet, or upload a .css file. Your styles are applied to the preview in real time and baked into the exported image, so the HTML to PNG output matches exactly what you see. This is handy when your HTML relies on an external stylesheet you want to keep separate.' },
+  { question: 'What is the difference between the PNG and JPG download?', answer: 'PNG keeps a fully transparent background wherever your HTML has no background color, which is ideal for logos, badges, and overlays. JPG always exports on a solid white background and produces a smaller file, better for screenshots and photos. Pick whichever format fits before you download — the HTML to image conversion happens entirely client-side.' },
+  { question: 'Why should I export HTML to a high-resolution 2x, 3x, or 4x image?', answer: 'The scale multiplies the pixel dimensions of the output. A 1x export matches the on-screen size, while 2x–4x renders the same layout at double, triple, or quadruple the resolution for crisp results on retina screens, print, and presentations. Convert HTML to PNG at 4x whenever you need a sharp image that still looks clean when zoomed or scaled up.' },
+  { question: 'Is this HTML to image converter free and private?', answer: 'Completely free, no signup, and fully private. The preview, rendering, and both the HTML to PNG and HTML to JPG exports all run locally in your browser using the canvas API. Your HTML and CSS never leave your device, which makes it safe for confidential email templates, invoices, and internal dashboards.' },
+  { question: 'My images are missing when I convert HTML to JPG — why?', answer: 'Browsers block reading external images hosted on another domain without CORS permission, so they cannot be baked into the exported canvas for security reasons. If a remote image is missing from your HTML to image result, embed it as a base64 data URI instead of linking to a remote URL, and it will render in the download every time.' },
+];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter HTML to Image Converter',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'Free online HTML to image converter. Paste HTML and CSS, preview live, then convert HTML to PNG (transparent) or HTML to JPG at up to 4x — all in the browser.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<BaseLayout
+  title="HTML to Image Converter — HTML to PNG & JPG | EMLinter"
+  description="Free HTML to image converter. Paste HTML and CSS, see a live preview, then convert HTML to PNG (transparent) or HTML to JPG at up to 4x — all in your browser."
+  keywords="html to image, html to png, html to jpg, html to png converter, convert html to jpg, convert html to png, html to image converter"
+  jsonLd={softwareLd}
+  faqSchema={faqSchema}
+>
+  <HtmlToImagePage client:only="react">
+    <SeoFallback
+      slot="fallback"
+      heading="Convert HTML to image — PNG & JPG, live in your browser."
+      intro="Paste HTML (and optional CSS) on the left, see a live preview on the right, then download a pixel-perfect PNG or JPG at up to 4x. No uploads, no signup — everything runs locally."
+      links={[
+        { href: '/tools/svg-to-png', label: 'SVG to PNG' },
+        { href: '/tools/html-minifier', label: 'HTML Minifier' },
+        { href: '/tools', label: 'All Developer Tools' },
+      ]}
+    />
+  </HtmlToImagePage>
+</BaseLayout>

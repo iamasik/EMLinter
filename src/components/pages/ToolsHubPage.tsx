@@ -7,6 +7,7 @@ import {
     CursorClickIcon,
     ImageIcon,
     ScaleIcon,
+    TemplateIcon,
 } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
@@ -61,6 +62,13 @@ const tools = [
         icon: ScaleIcon,
         tone: 'from-teal-500/20 to-teal-500/5 text-teal-300 ring-teal-400/20',
     },
+    {
+        id: 'html-to-image',
+        label: 'HTML to Image',
+        description: 'Paste HTML and CSS, preview it live, then convert HTML to a transparent PNG or a JPG at up to 4x — all in the browser.',
+        icon: TemplateIcon,
+        tone: 'from-rose-500/20 to-rose-500/5 text-rose-300 ring-rose-400/20',
+    },
 ];
 
 const faqs = [
@@ -96,10 +104,10 @@ const ToolsHubPage: React.FC = () => (
             eyebrow="HTML Email Developer Tools"
             title={
                 <>
-                    Seven free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
+                    Eight free tools every <span className="gradient-text">email developer</span> keeps open in a tab.
                 </>
             }
-            subtitle="Lint, beautify, minify, dark-mode test, copy email designs, convert SVG to PNG, and scale image elements without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
+            subtitle="Lint, beautify, minify, dark-mode test, copy email designs, convert SVG to PNG, turn HTML into an image, and scale image elements without leaving the browser. No signups, no uploads — every tool runs locally on your machine."
         >
             <a href="/tools/code-fix" className="btn-primary">Open the linter</a>
             <a href="/templates" className="btn-secondary">Free templates</a>

@@ -125,6 +125,7 @@ section for how detail-page meta is made crawlable despite the `client:only` bod
 | `/tools/design-copier`                       | `pages/tools/design-copier.astro`                    | `DesignCopierPage`               |
 | `/tools/svg-to-png`                          | `pages/tools/svg-to-png.astro`                       | `SvgToPngPage`                   |
 | `/tools/relative-image-scaler`               | `pages/tools/relative-image-scaler.astro`            | `RelativeImageScalerPage`        |
+| `/tools/html-to-image`                       | `pages/tools/html-to-image.astro`                    | `HtmlToImagePage`                |
 | `/solutions`                                 | `pages/solutions/index.astro`                        | `SolutionsHubPage`               |
 | `/solutions/html-email-test`                 | `pages/solutions/html-email-test.astro`              | `HtmlEmailTestPage`              |
 | `/solutions/outlook-button-generator`        | `pages/solutions/outlook-button-generator.astro`     | `OutlookButtonGeneratorPage`     |
