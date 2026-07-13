@@ -15,8 +15,9 @@ routes serve HTTP 200.
 
 ## Tech stack
 
-- **Astro 6** (`output: 'server'`) with the **`@astrojs/node`** adapter in `standalone` mode → the build
-  emits a Node server bundle at `dist/server/entry.mjs`, not a static site.
+- **Astro 6** (`output: 'server'`) with the **`@astrojs/vercel`** adapter (see `astro.config.mjs`) → the
+  build emits a Vercel serverless deployment (`.vercel/output/`), not a static site. (An earlier
+  `@astrojs/node` standalone setup was replaced; the `@astrojs/node` package has been removed.)
 - **React 19** for all UI (`@astrojs/react`). Astro files are thin route shells; all logic lives in `.tsx`.
 - **Tailwind CSS 3** via `@astrojs/tailwind` (compiled — there is no Tailwind CDN script).
 - **Firebase 12** (Firestore) for content (templates, posts, products, experts, app settings).
@@ -246,6 +247,19 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
   they aren't gated only by Firestore Security Rules on a publicly-known web config. `firebase.ts` /
   `firebaseAdmin.ts` no longer export any client-callable write functions — see `firestore.rules` at the
   repo root (paste into the Firebase console; not auto-deployed) for the rules that deny client writes.
+
+## Known npm audit findings (deferred — 2026-07-13)
+
+`npm audit` reports 3 "high" that are a **single** issue counted along one dependency chain:
+`path-to-regexp` ReDoS → `@vercel/routing-utils` → `@astrojs/vercel@10`. (`esbuild`'s dev-server
+file-read on Windows is a separate **low**, not one of the highs, despite how it's sometimes summarized.)
+
+**Deferred, not fixed, on purpose.** `@vercel/routing-utils` runs `path-to-regexp` at **build time**
+against our own route config to generate the Vercel routes manifest — it never processes attacker-supplied
+request paths at runtime, so the ReDoS is not reachable in production. The only fix npm offers is
+`@astrojs/vercel@11`, which requires **`astro@^7`** — i.e. it forces an Astro 6→7 framework major, far
+larger than an adapter bump. Not worth doing reactively for a build-time-only issue. **Revisit this and
+clear the audit as part of a deliberate Astro 7 upgrade**, not on its own.
 
 ## Conventions when making changes
 

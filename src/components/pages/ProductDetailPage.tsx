@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
+import { markdownSanitizeSchema } from '../../lib/markdownSanitize';
 import { getProductBySlug } from '../../services/firebase';
 import type { Product } from '../../types';
 import { SpinnerIcon, StarIcon, CheckCircleIcon, BookOpenIcon, ChevronDownIcon } from '../Icons';
@@ -114,7 +116,7 @@ const ProductDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
                     </section>
                     <section className="prose prose-invert prose-lg max-w-none">
                         <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
-                        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{product.longDescription}</ReactMarkdown>
+                        <ReactMarkdown rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]}>{product.longDescription}</ReactMarkdown>
                     </section>
                     {product.galleryImageUrls?.length > 0 && (
                         <section>

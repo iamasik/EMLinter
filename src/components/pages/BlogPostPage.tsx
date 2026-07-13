@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
+import { markdownSanitizeSchema } from '../../lib/markdownSanitize';
 import { getPostBySlug, getRecommendedPosts } from '../../services/firebase';
 import type { Post } from '../../types';
 import { SpinnerIcon, ThumbUpIcon, ThumbDownIcon, TrendingUpIcon } from '../Icons';
@@ -124,7 +126,7 @@ const BlogPostPage: React.FC<{ slug: string }> = ({ slug }) => {
                     </div>
                 </header>
                 {post.thumbnailUrl && <div className="my-8 rounded-xl overflow-hidden shadow-lg"><img src={post.thumbnailUrl} alt={post.title} fetchpriority="high" className="w-full h-auto object-cover" /></div>}
-                <div className="prose prose-lg max-w-none"><ReactMarkdown rehypePlugins={[rehypeRaw]} components={{ h1: 'h2' }}>{post.content}</ReactMarkdown></div>
+                <div className="prose prose-lg max-w-none"><ReactMarkdown rehypePlugins={[rehypeRaw, [rehypeSanitize, markdownSanitizeSchema]]} components={{ h1: 'h2' }}>{post.content}</ReactMarkdown></div>
                 <footer className="mt-12 pt-8 border-t border-gray-700/50">
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Tags</h3>
                     <div className="flex flex-wrap gap-2">{post.tags?.map(tag => <span key={tag} className="text-sm bg-gray-700 text-gray-300 px-3 py-1 rounded-full">#{tag}</span>)}</div>
