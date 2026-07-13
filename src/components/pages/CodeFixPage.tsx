@@ -122,9 +122,15 @@ const CodeFixPage: React.FC = () => {
         const beautified = beautifyHtml(htmlContent);
         setHtmlContent(beautified);
         timeoutIdRef.current = window.setTimeout(() => {
-            setErrors(validateHtml(beautified));
-            setIsChecking(false);
-            setAnalysisPerformed(true);
+            try {
+                setErrors(validateHtml(beautified));
+            } catch (err) {
+                console.error('HTML validation failed:', err);
+                setErrors([]);
+            } finally {
+                setIsChecking(false);
+                setAnalysisPerformed(true);
+            }
         }, 400);
     }, [htmlContent]);
 
@@ -134,9 +140,15 @@ const CodeFixPage: React.FC = () => {
         setAnalysisPerformed(false);
         if (timeoutIdRef.current) window.clearTimeout(timeoutIdRef.current);
         timeoutIdRef.current = window.setTimeout(() => {
-            setErrors(validateHtml(htmlContent));
-            setIsChecking(false);
-            setAnalysisPerformed(true);
+            try {
+                setErrors(validateHtml(htmlContent));
+            } catch (err) {
+                console.error('HTML validation failed:', err);
+                setErrors([]);
+            } finally {
+                setIsChecking(false);
+                setAnalysisPerformed(true);
+            }
         }, 400);
     }, [htmlContent]);
 

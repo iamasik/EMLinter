@@ -41,7 +41,10 @@ function validateAttributesAndCss(
   // Find the style attribute to validate its content
   const styleMatch = attrString.match(/style\s*=\s*(?:"([^"]*)"|'([^']*)')/i); // case-insensitive style attr
   if (styleMatch) {
-    const styleValue = styleMatch[1] || styleMatch[2]; // styleValue will be content of "..." or '...'
+    // Use nullish coalescing: an empty style attribute (style="") makes styleMatch[1]
+    // the empty string, which is falsy — `||` would wrongly fall through to the
+    // undefined single-quote group and crash on .trim() below.
+    const styleValue = styleMatch[1] ?? styleMatch[2] ?? ''; // content of "..." or '...'
     const cssDeclarations = styleValue.trim().replace(/;$/, '').split(';');
 
     cssDeclarations.forEach(declaration => {
@@ -149,6 +152,17 @@ function validateAttributesAndCss(
 }
 
 
+/**
+ * Replaces every HTML comment (including multi-line Outlook conditional-comment
+ * blocks) with whitespace, preserving newlines so line/column positions stay
+ * aligned with the original source. Tags that live *inside* a comment are thus
+ * ignored by the validator, while real tags that share a line with a comment
+ * remain intact. An unterminated comment is masked to end-of-input.
+ */
+function maskComments(html: string): string {
+  return html.replace(/<!--[\s\S]*?(?:-->|$)/g, (match) => match.replace(/[^\n]/g, ' '));
+}
+
 export function validateHtml(html: string): HtmlValidationError[] {
   // This regex finds opening or closing tags.
   // Group 1: optional '/' for closing tags
@@ -156,19 +170,21 @@ export function validateHtml(html: string): HtmlValidationError[] {
   // It is defined inside the function to avoid state issues with the 'g' flag.
   const TAG_REGEX = /<(\/)?([a-zA-Z0-9:]+)([^>]*)>/g;
   
-  const lines = html.split('\n');
+  const originalLines = html.split('\n');
+  // Scan tags on a comment-masked copy (so tags inside comments are ignored),
+  // but report errors against the original line. This lets real tags that share
+  // a line with the DOCTYPE or a comment — e.g. `<!DOCTYPE ...><html><head>` all
+  // on line 1 — still be validated, instead of the whole line being skipped and
+  // their closing tags later reported as "unexpected".
+  const maskedLines = maskComments(html).split('\n');
   const stack: { tagName: string; lineNumber: number; lineContent: string }[] = [];
   const errors: HtmlValidationError[] = [];
 
-  lines.forEach((line, index) => {
+  maskedLines.forEach((maskedLine, index) => {
     const lineNumber = index + 1;
+    const line = originalLines[index];
     let match;
-    // We ignore comments
-    const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('<!--') || trimmedLine.startsWith('<!DOCTYPE')) {
-        return;
-    }
-    while ((match = TAG_REGEX.exec(line)) !== null) {
+    while ((match = TAG_REGEX.exec(maskedLine)) !== null) {
       const isClosing = match[1] === '/';
       const tagName = match[2].toLowerCase();
       const attrString = match[3];
