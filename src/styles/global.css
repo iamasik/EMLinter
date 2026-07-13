@@ -1,4 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Self-hosted fonts (latin subset, woff2) — replaces the render-blocking Google
+   Fonts @import. Inter and JetBrains Mono ship as single variable files spanning
+   their weight axes; Space Grotesk as static instances. All use font-display:swap
+   so text paints immediately with a fallback and swaps in when the font loads. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('/font/Inter.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400 500;
+  font-display: swap;
+  src: url('/font/JetBrainsMono.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/font/SpaceGrotesk-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/font/SpaceGrotesk-Medium.woff2') format('woff2');
+}
+/* No dedicated 600 weight file — map 600 to the SemiBold-adjacent Bold cut so
+   font-weight:600 headings (font-display default) don't fall back to the browser's
+   synthetic bolding of Medium. */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600 700;
+  font-display: swap;
+  src: url('/font/SpaceGrotesk-Bold.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/font/SpaceGrotesk-Light.woff2') format('woff2');
+}
 
 @tailwind base;
 @tailwind components;

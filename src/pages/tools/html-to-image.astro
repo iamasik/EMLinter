@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HtmlToImagePage from '../../components/pages/HtmlToImagePage';
-import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'How do I convert HTML to an image online?', answer: 'Paste your markup into the code box on the left, or upload an .html file. The panel on the right renders a live preview instantly — no button to click. When it looks right, choose PNG or JPG, pick a scale from 1x to 4x, and download. This HTML to image converter draws your rendered page onto a canvas in the browser, so nothing is uploaded to a server.' },
@@ -29,16 +28,5 @@ const softwareLd = {
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <HtmlToImagePage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="Convert HTML to image — PNG & JPG, live in your browser."
-      intro="Paste HTML (and optional CSS) on the left, see a live preview on the right, then download a pixel-perfect PNG or JPG at up to 4x. No uploads, no signup — everything runs locally."
-      links={[
-        { href: '/tools/svg-to-png', label: 'SVG to PNG' },
-        { href: '/tools/html-minifier', label: 'HTML Minifier' },
-        { href: '/tools', label: 'All Developer Tools' },
-      ]}
-    />
-  </HtmlToImagePage>
+  <HtmlToImagePage client:load />
 </BaseLayout>

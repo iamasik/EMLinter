@@ -37,6 +37,9 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
     { path: '/resources/how-it-works', priority: 0.6, changefreq: 'monthly' },
     { path: '/resources/faq', priority: 0.6, changefreq: 'monthly' },
     { path: '/contact-us', priority: 0.5, changefreq: 'yearly' },
+    { path: '/privacy-policy', priority: 0.3, changefreq: 'yearly' },
+    { path: '/cookie-policy', priority: 0.3, changefreq: 'yearly' },
+    { path: '/terms', priority: 0.3, changefreq: 'yearly' },
 ];
 
 const toDate = (createdAt: any): string | null => {

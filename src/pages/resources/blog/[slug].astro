@@ -39,10 +39,12 @@ const jsonLd = post
       publisher: {
         '@type': 'Organization',
         name: 'EMLinter',
-        logo: { '@type': 'ImageObject', url: `${SITE_URL}/favicon.svg` },
+        logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon-512.png` },
       },
       datePublished: toIso(post.createdAt),
-      dateModified: toIso(post.createdAt),
+      // Prefer an explicit updatedAt when present so edited posts signal freshness;
+      // falls back to createdAt until the Firestore field is backfilled.
+      dateModified: toIso((post as any).updatedAt) || toIso(post.createdAt),
       keywords: post.tags?.join(', '),
     }
   : undefined;

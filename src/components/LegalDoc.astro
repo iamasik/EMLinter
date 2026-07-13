@@ -1,0 +1,45 @@
+---
+/**
+ * Static, server-rendered legal-document shell (crawlable — no client:only).
+ * Renders a titled prose container; page passes body via <slot />.
+ */
+export interface Props {
+    heading: string;
+    updated: string;
+}
+const { heading, updated } = Astro.props;
+---
+<article class="container-prose py-6 md:py-10">
+    <header class="mb-8 border-b border-white/10 pb-6">
+        <h1 class="font-display text-3xl md:text-4xl font-extrabold tracking-tight text-white">{heading}</h1>
+        <p class="mt-3 text-sm text-ink-400">Last updated: {updated}</p>
+    </header>
+    <div class="legal-doc text-ink-300">
+        <slot />
+    </div>
+</article>
+
+<style is:global>
+    .legal-doc h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #f3f4f6;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+    }
+    .legal-doc p { margin-bottom: 1rem; line-height: 1.7; }
+    .legal-doc ul {
+        list-style: disc outside;
+        margin: 0 0 1rem 1.5rem;
+    }
+    .legal-doc li { margin-bottom: 0.5rem; line-height: 1.7; }
+    .legal-doc a { color: #f472b6; text-decoration: underline; transition: color 0.2s; }
+    .legal-doc a:hover { color: #db2777; }
+    .legal-doc strong { color: #f3f4f6; }
+    .legal-doc code {
+        background-color: rgba(255, 255, 255, 0.08);
+        padding: 0.15rem 0.4rem;
+        border-radius: 0.25rem;
+        font-size: 0.85em;
+    }
+</style>

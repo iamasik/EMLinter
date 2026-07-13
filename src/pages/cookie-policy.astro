@@ -1,0 +1,30 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LegalDoc from '../components/LegalDoc.astro';
+---
+<BaseLayout
+  title="Cookie Policy | EMLinter"
+  description="How EMLinter uses cookies and browser storage. We rely on localStorage for essential features and minimal third-party cookies from analytics and embeds."
+>
+  <LegalDoc heading="Cookie Policy" updated="June 28, 2026">
+    <h2>What Are Cookies?</h2>
+    <p>Cookies are small text files stored on your device when you visit a website. They are used to make websites work more efficiently and to provide information to the site owners.</p>
+
+    <h2>Our Use of Cookies and Similar Technologies</h2>
+    <p>EMLinter uses modern web technologies to provide functionality with minimal use of traditional cookies.</p>
+    <ul>
+      <li><strong>Strictly Necessary — <code>localStorage</code>:</strong> We use your browser's <code>localStorage</code> for essential functionality. The Visual Editor uses it to save your template progress directly on your device. This is not sent to a server.</li>
+      <li><strong>Analytics Cookies:</strong> Google Analytics sets cookies to measure anonymized, aggregate usage of the Service. These help us understand which tools are most useful and improve them.</li>
+      <li><strong>Third-Party Cookies:</strong> Some third-party services we use (Mailchimp, Firebase) may set their own cookies when their features load. We do not control these cookies.</li>
+    </ul>
+
+    <h2>Managing Your Data</h2>
+    <p>You can clear your browser's <code>localStorage</code> and cookies at any time through your browser settings. You can also opt out of Google Analytics using Google's browser add-on. Disabling storage will not break the core tools, though the Visual Editor will no longer remember your progress between visits.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Cookie Policy from time to time. Any changes will be posted on this page with an updated "Last updated" date.</p>
+
+    <h2>Contact Us</h2>
+    <p>Questions about our use of cookies? Reach us via the <a href="/contact-us">Contact Us</a> page.</p>
+  </LegalDoc>
+</BaseLayout>

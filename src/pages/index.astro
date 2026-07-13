@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import HomePage from '../components/pages/HomePage';
-import SeoFallback from '../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is EMLinter and who is it for?', answer: 'EMLinter is a free, browser-based HTML email toolkit for email developers, marketers, and designers. It bundles a linter, beautifier, minifier, dark-mode tester, visual editor, and bulletproof Outlook generators so you can validate, debug, and ship pixel-perfect campaigns from one workflow.' },
@@ -30,19 +29,5 @@ const softwareLd = {
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <HomePage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="Build, lint, and ship flawless HTML emails in every inbox."
-      intro="EMLinter is the free, browser-based toolkit email developers actually use. Validate HTML, simulate dark mode, generate bulletproof Outlook code, and edit templates visually — all without a signup."
-      links={[
-        { href: '/tools/code-fix', label: 'HTML Email Linter' },
-        { href: '/tools/html-minifier', label: 'HTML Minifier' },
-        { href: '/tools/dark-mode-checker', label: 'Dark Mode Tester' },
-        { href: '/solutions/outlook-button-generator', label: 'Outlook Button Generator' },
-        { href: '/visual-editor', label: 'Visual Editor' },
-        { href: '/templates', label: 'Email Templates' },
-      ]}
-    />
-  </HomePage>
+  <HomePage client:load />
 </BaseLayout>

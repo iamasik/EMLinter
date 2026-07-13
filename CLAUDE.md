@@ -59,16 +59,19 @@ A single layout renders `<head>` and the chrome. It is richer than a plain wrapp
 - Default `ogImage` is `${SITE_URL}/og-default.png` — a branded 1200×630 asset that **exists** in `public/`.
   Regenerate it (e.g. via the bundled `sharp` from an SVG) if branding changes; don't point the default at
   a missing file.
-- `SITE_URL` is `https://emlinter.com` (also set as `site` in `astro.config.mjs` — keep both in sync).
+- `SITE_URL` is `https://www.emlinter.com` (also set as `site` in `astro.config.mjs` — keep both in sync).
   Update there if the domain changes.
-- Mounts `AnnouncementBar`, `Header`, `Breadcrumbs`, `Footer` (all `client:only="react"`) and `<slot />`s
-  page content into `<main class="container-wide ...">`.
+- Mounts `AnnouncementBar` (`client:only`) plus `Header`, `Breadcrumbs`, `Footer` (`client:load`, so their
+  nav/link markup is server-rendered and crawlable — see Hydration) and `<slot />`s page content into
+  `<main class="container-wide ...">`. Also preloads two same-origin, LCP-critical fonts (see Styling).
 
 ### 2. `src/pages/**/*.astro` — one shell per route
 
 Each shell imports its React page from `src/components/pages/`, sets per-route SEO props on `BaseLayout`,
-and renders the component with `client:only="react"`. Pages carry their own page-specific `faqSchema`
-and `jsonLd` literals inline in the shell frontmatter (see `pages/index.astro`, `pages/templates/index.astro`).
+and mounts the component — `client:load` if the page is SSR-safe (preferred; server-renders the body) or
+`client:only="react"` + a `<SeoFallback slot="fallback">` if it isn't (see Hydration for the two tiers).
+Pages carry their own page-specific `faqSchema` and `jsonLd` literals inline in the shell frontmatter (see
+`pages/index.astro`, `pages/templates/index.astro`).
 
 ### 3. `src/components/` — ported React (source of truth for behavior)
 
@@ -80,33 +83,50 @@ and `jsonLd` literals inline in the shell frontmatter (see `pages/index.astro`, 
 - `SeoFallback.astro` — server-rendered, crawlable hero (h1 + intro + internal links) passed to
   every indexable page via `slot="fallback"`. See the SEO section for the copy-parity rule.
 
-### Hydration: always `client:only="react"`
+### Hydration: two tiers — `client:load` for SSR-safe pages, `client:only` for the rest
 
-Every React **page/chrome** mount uses `client:only="react"` — **not** `client:load` or `client:visible`.
-The components rely on `window`, `localStorage`, the Firebase client SDK, and client-only React state that
-does not survive SSR. Do not change a mount directive without first confirming the component is SSR-safe.
+Mounts fall into two groups. **Before changing any directive, confirm the component is SSR-safe** (no
+`window`/`document`/`localStorage`/`navigator`/Firebase access at module scope, in the render body, or in a
+`useState`/`useMemo` initializer — only inside `useEffect`/`useCallback`/event handlers; child modals must
+return `null` when closed). A render-time browser-global access throws at request time (500), not at build.
 
-**Exception:** `src/pages/404.astro` renders its content as **static Astro markup in the slot** (no
-`client:only`), so the 404 is useful without JS. Follow that pattern for any page whose content is static.
+**Tier 1 — `client:load` (server-rendered body, crawlable).** The **chrome** (`Header`, `Breadcrumbs`,
+`Footer`) and the **static tool/solution/content pages** mount `client:load`: Astro server-renders their
+full markup — hero, SEO copy, **static FAQ answer text**, nav/link graph — into the initial HTML (crawlable
+by non-JS crawlers: Bing, social scrapers, AI bots) and then hydrates for interactivity. This is the
+higher-SEO path and is the default for any SSR-safe page. Pages currently on `client:load`: `HomePage`,
+`ToolsHubPage`, `SolutionsHubPage`, all eight `/tools/*` pages, the three Outlook `/solutions/*` generators,
+`HowItWorksPage`, `ContactUsPage`, and `PixelConverterPage`. These shells are **one-liners with no
+`SeoFallback`** — the component's own `PageHero`/header is the server-rendered hero (a fallback would
+double the `<h1>`). `Breadcrumbs`/`Header` take a `currentPath` prop from `BaseLayout` so they render the
+correct trail/active state without reading `window`.
 
-**Body content crawlability — `SeoFallback.astro`:** because pages are `client:only`, the server-delivered
-`<body>` would otherwise have no headings/text/links until React hydrates (non-JS crawlers — Bing, social
-scrapers, AI bots — would see an empty body). Every indexable shell passes a `<SeoFallback slot="fallback">`
-to its `client:only` island with a real `heading`, `intro`, and internal `links`. Astro server-renders this
-into the initial HTML (crawlable) and **auto-removes it the instant React hydrates** — no client-side hide
-hack. It's styled to mirror `PageHero` (grid backdrop, "Loading toolkit…" chip, `.btn-secondary` pill links)
-so the brief pre-hydration window reads as an intentional branded hero, not a half-loaded page.
+**Tier 2 — `client:only` + `SeoFallback` (dynamic/stateful pages).** Pages that read `localStorage`, query
+params, or Firebase during their initial render — `VisualEditorPage`, `TemplatesPage`/`TemplateDetailPage`,
+`BlogPage`/`BlogPostPage`, `ProductsPage`/`ProductDetailPage`, `HtmlEmailTestPage`, and the FAQ page
+(`OurExpertsPage`, whose Q&A is Firebase-fetched so `client:load` wouldn't expose it) — stay `client:only`.
+Their body can't survive SSR, so each passes a `<SeoFallback slot="fallback">` island with a real `heading`,
+`intro`, and internal `links`. `AnnouncementBar` also stays `client:only`.
 
-> **CRITICAL — copy parity:** the fallback `heading`/`intro` **must match the React component's real rendered
-> h1 and intro verbatim** (including casing, e.g. lowercase `html` where the source uses it as a keyword).
-> Any difference visibly rewrites itself on hydration — a jarring flash. Do **not** substitute SEO-richer or
-> meta-title copy. For `PageHero` pages, copy the exact `title`/`subtitle`. For custom-header pages
-> (`VisualEditorPage`, `BlogPage`, `ProductsPage`, `ContactUsPage`, `OurExpertsPage`, `HowItWorksPage`), read
-> the component's own `<header>`/`<h1>`. Detail shells (`[slug]`) build the fallback from the same
-> server-fetched entity the meta uses, so they stay in sync automatically.
+**`SeoFallback.astro`** renders a crawlable hero (mirrors `PageHero`: grid backdrop, "Loading toolkit…"
+chip, `.btn-secondary` pills) into the initial HTML; Astro keeps a second inert copy inside a
+`<template data-astro-template>` and swaps in the real component the instant React hydrates — no client-side
+hide hack. (That inert `<template>` copy is why a `client:only` page shows two `<h1>` in raw HTML — one
+real, one inert; not a duplicate-heading bug.)
 
-The `<head>` (all meta + JSON-LD) is also server-rendered, so metadata is always crawlable. See the SEO
-section for how detail-page meta is made crawlable despite the `client:only` body.
+> **CRITICAL — copy parity (Tier 2 only):** the fallback `heading`/`intro` **must match the React
+> component's real rendered h1 and intro verbatim** (including casing, e.g. lowercase `html` where the source
+> uses it as a keyword). Any difference visibly rewrites itself on hydration — a jarring flash. Do **not**
+> substitute SEO-richer or meta-title copy. For custom-header pages (`VisualEditorPage`, `BlogPage`,
+> `ProductsPage`, `OurExpertsPage`), read the component's own `<header>`/`<h1>`. Detail shells (`[slug]`)
+> build the fallback from the same server-fetched entity the meta uses, so they stay in sync automatically.
+
+**404 / legal exception:** `src/pages/404.astro` and the three legal pages (`privacy-policy`,
+`cookie-policy`, `terms`, via `LegalDoc.astro`) render their content as **static Astro markup in the slot**
+(no React island at all). Follow that pattern for any purely static page.
+
+The `<head>` (all meta + JSON-LD) is always server-rendered regardless of tier, so metadata is always
+crawlable. See the SEO section for how Tier-2 detail-page meta is made crawlable despite the `client:only` body.
 
 ## Route map
 
@@ -151,13 +171,16 @@ Plus a dynamic sitemap endpoint and a custom 404 (not React pages):
 | --------------- | --------------------------- | ------------------------------------------------------------ |
 | `/sitemap.xml`  | `pages/sitemap.xml.ts`      | API route; static routes + live Firebase URLs (see SEO below)|
 | `/404`          | `pages/404.astro`           | Static server-rendered content, `noindex` (no `client:only`) |
+| `/privacy-policy` | `pages/privacy-policy.astro` | Static, crawlable legal page via `LegalDoc.astro`          |
+| `/cookie-policy`  | `pages/cookie-policy.astro`  | Static, crawlable legal page via `LegalDoc.astro`          |
+| `/terms`          | `pages/terms.astro`          | Static, crawlable Terms of Service via `LegalDoc.astro`    |
 
 Notes:
 - The original React `HubPage.tsx` was split into concrete `ToolsHubPage` and `SolutionsHubPage`
   components so each shell stays a one-liner.
 - The FAQ route (`/resources/faq`) renders a component still named `OurExpertsPage`.
 - `VisualEditorPage` backs both `/visual-editor` and `/visual-editor/<slug>`. The `[slug]` shell sets
-  `canonical="https://emlinter.com/visual-editor"` so the deep-link variants don't compete as duplicates.
+  `canonical="https://www.emlinter.com/visual-editor"` so the deep-link variants don't compete as duplicates.
 - The four **detail shells** (`templates/[slug]`, `resources/blog/[slug]`, `resources/products/[slug]`)
   are **not** one-liners — they fetch from Firebase server-side to emit real per-entity meta (see SEO below).
 
@@ -183,7 +206,8 @@ The old SPA passed a second `state` arg through `onNavigate(page, state)` (e.g. 
 
 ## SEO (read before touching meta, shells, or routing)
 
-The `<head>` is fully server-rendered; the `<body>` is `client:only` (see Hydration above). The setup:
+The `<head>` is fully server-rendered on every page; the `<body>` is server-rendered for Tier-1
+`client:load` pages and `client:only` (with a `SeoFallback` hero) for Tier-2 pages (see Hydration above). The setup:
 
 - **`BaseLayout.astro` owns all head SEO** — see the BaseLayout section for props and the always-on
   `Organization` + `WebSite` + `BreadcrumbList` schema. Pass page-specific `jsonLd` / `faqSchema` from the
@@ -206,9 +230,18 @@ The `<head>` is fully server-rendered; the `<body>` is `client:only` (see Hydrat
   `STATIC_ROUTES`.** `public/robots.txt` references it.
 - **Images:** grid/list thumbnails use `loading="lazy"`; above-the-fold detail-page hero images use
   `fetchpriority="high"` (they're LCP candidates — never lazy-load them).
+- **Legal pages:** `/privacy-policy`, `/cookie-policy`, and `/terms` are **static, crawlable Astro pages**
+  (server-rendered via `LegalDoc.astro`, indexable, in `STATIC_ROUTES`). The `Footer` links to them with
+  `<a href>` — the old React `PolicyModal` approach is gone (`PolicyModal.tsx` is now unused). Edit the
+  copy in the `.astro` pages; `terms.astro` has `[YOUR JURISDICTION]` governing-law placeholders to fill.
+- **`llms.txt`:** `public/llms.txt` is a markdown site map for AI crawlers. Keep its link list in sync when
+  routes change.
+- **Body crawlability:** static tool/solution/content pages now render their full body (hero, SEO copy,
+  FAQ answer text) server-side via `client:load` — see Hydration Tier 1. Only the **Tier-2 dynamic pages**
+  (editor, templates/blog/products lists + details, html-email-test, faq) remain `client:only` with a
+  `SeoFallback` hero, because their bodies depend on `localStorage`/query params/Firebase at render.
 - **Known follow-ups (not yet done):** placeholder social URLs in `Footer.tsx` and `sameAs` in
-  `BaseLayout.astro` (`twitter.com/emlinter`, `github.com/emlinter`); Privacy/Cookie policies live only as
-  React modals with no crawlable URL; body content is not server-rendered (see Hydration limitation).
+  `BaseLayout.astro` (`twitter.com/emlinter`, `github.com/emlinter`).
 
 ## Services (`src/services/`)
 
@@ -217,7 +250,7 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
 - `firebase.ts` — Firestore reads/writes. Exports: `getTemplates`, `getTemplateBySlug`,
   `updateTemplateRating`, `getVideoGuides`, `getPosts`, `getPostBySlug`, `getRecommendedPosts`,
   `updatePostVoteCount`, `getExperts`, `getAppSettings`, `getProducts`, `getProductBySlug`, plus `db`.
-  Firebase web config is inline and public — safe to commit. **These getters are now called both
+  Firebase web config is read from `PUBLIC_FIREBASE_*` env vars and public — not secrets. **These getters are now called both
   client-side (in components) and server-side (in detail shells + `sitemap.xml.ts`)** — the Firebase web
   SDK runs fine in Node, so keep them isomorphic (no `window`/`document` references).
 - `htmlValidator.ts`, `htmlBeautifier.ts`, `htmlMinifier.ts`, `colorAnalyzer.ts` — pure client-side
@@ -230,8 +263,12 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
 
 - `tailwind.config.mjs` defines the design system: color scales `ink` (dark UI base, `ink-950`
   background), `brand` (pink/magenta), `accent` (violet); `display`/`sans`/`mono` font families
-  (Inter, Space Grotesk, JetBrains Mono, loaded via Google Fonts `@import` in `global.css`); custom
-  `backgroundImage`, `boxShadow` (`glow`, `card`), and animations (`fade-up`, `shimmer`, `pulse-slow`).
+  (Inter, Space Grotesk, JetBrains Mono — **self-hosted** as `woff2` in `public/font/` via `@font-face`
+  in `global.css`, `font-display: swap`; the old render-blocking Google Fonts `@import` was removed and
+  `BaseLayout` preloads `Inter.woff2` + `SpaceGrotesk-Bold.woff2`. Inter & JetBrains Mono are single
+  variable files; Space Grotesk is static instances — there is no 600 cut, so `font-weight:600` maps to
+  the Bold file. To add weights/families, drop the `woff2` in `public/font/` and add an `@font-face`);
+  custom `backgroundImage`, `boxShadow` (`glow`, `card`), and animations (`fade-up`, `shimmer`, `pulse-slow`).
 - `src/styles/global.css` holds Tailwind directives plus reusable component classes: `.container-wide`,
   `.container-prose`, `.glass`, `.card`, `.gradient-text`, `.btn-primary`, `.btn-secondary`, `.chip`,
   `.section-title`, `.section-subtitle`, `.custom-scrollbar`. Imported once by `BaseLayout.astro`.
@@ -239,7 +276,7 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
 
 ## Environment
 
-- Firebase config is inline in `firebase.ts` (public web keys), not env-driven.
+- Firebase config is read from `PUBLIC_FIREBASE_*` env vars in `firebase.ts` (public web keys, not secrets; see `.env.example`).
 - **`FIREBASE_SERVICE_ACCOUNT_KEY`** (server-only, no `PUBLIC_` prefix) — the full JSON contents of a
   Firebase service-account key, read by `src/services/firebaseAdmin.ts` (`firebase-admin`, not the
   client SDK). All Firestore *writes* (`contactMessages`, template ratings, post votes) go through this
@@ -265,9 +302,11 @@ clear the audit as part of a deliberate Astro 7 upgrade**, not on its own.
 
 - **New route** → add a `.astro` shell under `src/pages/` that imports the React page from
   `src/components/pages/`, wraps it in `BaseLayout` with `title` + `description` (and any `faqSchema` /
-  `jsonLd`), and mounts it `client:only="react"`. Add a row to the route map above, **and add the URL to
-  `STATIC_ROUTES` in `src/pages/sitemap.xml.ts`**. Keep title ≤ 60 / description ≤ 160 chars, suffix
-  `| EMLinter` (see SEO section). The `new-route` skill scaffolds this.
+  `jsonLd`), and mounts it `client:load` if the component is SSR-safe (preferred — server-renders the body;
+  omit `SeoFallback`) or `client:only="react"` + `<SeoFallback slot="fallback">` if not (see Hydration's two
+  tiers). Add a row to the route map above, **and add the URL to `STATIC_ROUTES` in
+  `src/pages/sitemap.xml.ts`**. Keep title ≤ 60 / description ≤ 160 chars, suffix `| EMLinter` (see SEO
+  section). The `new-route` skill scaffolds this.
 - **New dynamic detail route** → fetch its entity from Firebase **server-side in the shell frontmatter**
   (try/catch → generic fallback) to emit real meta + `jsonLd`; don't rely on client-side `document.title`
   patching alone. Mirror `resources/blog/[slug].astro`.

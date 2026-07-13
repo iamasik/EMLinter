@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import OutlookButtonGeneratorPage from '../../components/pages/OutlookButtonGeneratorPage';
-import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is a bulletproof button in HTML email?', answer: 'A bulletproof button is an email CTA that renders identically across every email client, including Microsoft Outlook for Windows. It wraps the CTA in VML <v:roundrect> code so Outlook reads it as a vector shape, while every other client uses the regular CSS path.' },
@@ -29,16 +28,5 @@ const softwareLd = {
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <OutlookButtonGeneratorPage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="Make a bulletproof button that survives every version of Outlook."
-      intro="Free html email button generator that emits VML + CSS hybrid code. Customize colors, size, font, and corners — get production-ready bulletproof email buttons that render identically in Outlook, Gmail, and Apple Mail."
-      links={[
-        { href: '/solutions/outlook-background-generator', label: 'Outlook Background Generator' },
-        { href: '/solutions/outlook-ready-html', label: 'Outlook HTML Sanitizer' },
-        { href: '/solutions', label: 'All Outlook Solutions' },
-      ]}
-    />
-  </OutlookButtonGeneratorPage>
+  <OutlookButtonGeneratorPage client:load />
 </BaseLayout>

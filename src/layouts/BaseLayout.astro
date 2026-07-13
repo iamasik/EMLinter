@@ -43,7 +43,8 @@ const baseOrganization = {
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/favicon.svg`,
+    // Raster ≥112×112 for Google's logo rich result (SVG is not eligible).
+    logo: `${SITE_URL}/icon-512.png`,
     // `sameAs` intentionally omitted until real, verified social profiles exist —
     // linking to unverified/placeholder handles is a weak or misleading entity signal.
 };
@@ -159,9 +160,13 @@ const allLd = [baseOrganization, baseWebsite, ...breadcrumbLd, ...userLd, ...faq
         {/* twitter:site/creator omitted until a verified @handle exists — a placeholder
             handle produces a broken/misattributed card. */}
 
+        <!-- Preload self-hosted, LCP-critical fonts (body + headings). Space Grotesk
+             backs every h1/h2 hero; Inter backs body copy. Both are same-origin now,
+             so no font-CDN preconnect is needed. -->
+        <link rel="preload" href="/font/Inter.woff2" as="font" type="font/woff2" crossorigin />
+        <link rel="preload" href="/font/SpaceGrotesk-Bold.woff2" as="font" type="font/woff2" crossorigin />
+
         <!-- Preconnect -->
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link rel="preconnect" href="https://firestore.googleapis.com" />
 
         <!-- Structured data -->
@@ -171,11 +176,16 @@ const allLd = [baseOrganization, baseWebsite, ...breadcrumbLd, ...userLd, ...faq
     </head>
     <body class="min-h-screen flex flex-col overflow-x-hidden">
         <AnnouncementBar client:only="react" />
-        <Header currentPath={currentPath} client:only="react" />
+        <!-- Header, Breadcrumbs, Footer use client:load (not client:only) so their nav
+             and link markup is server-rendered into the initial HTML — a crawlable
+             internal-link graph for non-JS crawlers — then hydrated for interactivity
+             (dropdowns, mobile menu, newsletter/policy modals). All three are SSR-safe:
+             browser APIs are used only inside effects/handlers, never at render. -->
+        <Header currentPath={currentPath} client:load />
         <main class="container-wide py-8 md:py-12 flex-grow w-full">
-            <Breadcrumbs client:only="react" />
+            <Breadcrumbs currentPath={currentPath} client:load />
             <slot />
         </main>
-        <Footer client:only="react" />
+        <Footer client:load />
     </body>
 </html>

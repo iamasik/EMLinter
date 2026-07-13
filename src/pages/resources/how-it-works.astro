@@ -1,19 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HowItWorksPage from '../../components/pages/HowItWorksPage';
-import SeoFallback from '../../components/SeoFallback.astro';
 ---
 <BaseLayout title="How It Works — Guides & Video Tutorials | EMLinter" description="Step-by-step guides and video tutorials for EMLinter's HTML email workflow — linting, beautifying, minifying, dark-mode testing, and Outlook generators.">
-  <HowItWorksPage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="How It Works"
-      intro="Watch our video guides to learn how to use EMLinter's powerful toolkit to validate, fix, and visually edit your HTML emails."
-      links={[
-        { href: '/tools', label: 'Developer Tools' },
-        { href: '/solutions', label: 'Outlook Solutions' },
-        { href: '/visual-editor', label: 'Visual Editor' },
-      ]}
-    />
-  </HowItWorksPage>
+  <HowItWorksPage client:load />
 </BaseLayout>

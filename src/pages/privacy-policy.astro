@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import LegalDoc from '../components/LegalDoc.astro';
+---
+<BaseLayout
+  title="Privacy Policy | EMLinter"
+  description="How EMLinter handles your data. All HTML processing runs locally in your browser — your code is never uploaded, logged, or stored on our servers."
+>
+  <LegalDoc heading="Privacy Policy" updated="June 28, 2026">
+    <p>EMLinter ("we," "us," or "our") is committed to protecting your privacy. This Privacy Policy explains how we handle information in connection with the EMLinter website (the "Service").</p>
+
+    <h2>1. Information Collection and Use</h2>
+    <p>Our Service is designed to function almost entirely within your browser. We do not operate a backend application server that collects or stores your personal data.</p>
+    <ul>
+      <li><strong>HTML Code:</strong> Any HTML code you paste, upload, or edit using our tools (like the Linter, Beautifier, or Visual Editor) is processed locally in your browser. It is never sent to or stored on our servers.</li>
+      <li><strong>Newsletter Subscription:</strong> If you choose to subscribe to our newsletter, you provide your first name and email address. This information is collected and managed by our third-party email marketing provider, Mailchimp, and is subject to their privacy policy.</li>
+      <li><strong>Contact Form:</strong> If you send us a message through our <a href="/contact-us">Contact</a> page, we store the details you submit in order to respond to you.</li>
+      <li><strong>Image URLs:</strong> The Visual Editor allows you to change image sources by providing a URL. If you use images hosted by third-party services, you are responsible for that content.</li>
+    </ul>
+
+    <h2>2. Local Storage</h2>
+    <p>To enhance your experience, the Visual Editor saves your email template content to your browser's <code>localStorage</code>. This data is stored only on your computer and is not accessible by us.</p>
+
+    <h2>3. Analytics</h2>
+    <p>We use Google Analytics to understand aggregate, anonymized traffic patterns (such as which tools are most used). This helps us improve the Service. Google Analytics may set cookies; see our <a href="/cookie-policy">Cookie Policy</a> for details.</p>
+
+    <h2>4. Third-Party Services</h2>
+    <ul>
+      <li><strong>Mailchimp:</strong> For newsletter management.</li>
+      <li><strong>Firebase / Firestore:</strong> Used to serve template metadata, blog posts, and app settings, and to store contact-form messages and ratings.</li>
+      <li><strong>Google Analytics:</strong> For anonymized usage statistics.</li>
+    </ul>
+
+    <h2>5. Children's Privacy</h2>
+    <p>The Service is not directed to children under 13, and we do not knowingly collect personal information from children.</p>
+
+    <h2>6. Changes to This Privacy Policy</h2>
+    <p>We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date above.</p>
+
+    <h2>7. Contact Us</h2>
+    <p>If you have any questions about this Privacy Policy, please get in touch via our <a href="/contact-us">Contact Us</a> page.</p>
+  </LegalDoc>
+</BaseLayout>

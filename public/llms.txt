@@ -1,0 +1,51 @@
+# EMLinter
+
+> EMLinter is a free, browser-based HTML email toolkit — a linter, beautifier, minifier,
+> dark-mode tester, no-code visual editor, and bulletproof Outlook VML generators (buttons &
+> backgrounds). Every tool runs client-side in the browser: pasted HTML is never uploaded,
+> logged, or stored. No signup, no paywall. Built for email developers, marketers, and
+> designers who write or maintain HTML email and need fast, focused, code-first utilities.
+
+Key facts:
+- 100% free, no account required. All HTML processing is local to the browser.
+- Targets Gmail, Apple Mail, Outlook 2007–2024 (Word + WebView), Outlook.com, Yahoo Mail,
+  Samsung Mail, Thunderbird, ProtonMail, and HEY. Outlook tools emit VML fallbacks.
+- Templates are plain responsive HTML compatible with Mailchimp, Klaviyo, HubSpot, Constant
+  Contact, Salesforce Marketing Cloud, Campaign Monitor, and ActiveCampaign.
+- Site: https://www.emlinter.com
+
+## Tools
+- [HTML Email Linter](https://www.emlinter.com/tools/code-fix): Validate and fix common HTML email errors.
+- [HTML Beautifier](https://www.emlinter.com/tools/beautify-code): Format and clean HTML email code.
+- [HTML Email Minifier](https://www.emlinter.com/tools/html-minifier): Compress HTML to reduce file size.
+- [Dark Mode Tester](https://www.emlinter.com/tools/dark-mode-checker): Preview how emails render in dark mode.
+- [Design Copier](https://www.emlinter.com/tools/design-copier): Copy a visual design into Gmail/Outlook-ready HTML.
+- [SVG to PNG](https://www.emlinter.com/tools/svg-to-png): View, edit, and convert SVG to PNG.
+- [Relative Image Scaler](https://www.emlinter.com/tools/relative-image-scaler): Scale image elements proportionally.
+- [HTML to Image](https://www.emlinter.com/tools/html-to-image): Convert HTML to PNG or JPG.
+
+## Solutions
+- [HTML Email Test](https://www.emlinter.com/solutions/html-email-test): Send real test emails across clients.
+- [Outlook Button Generator](https://www.emlinter.com/solutions/outlook-button-generator): Bulletproof VML email buttons.
+- [Outlook Background Generator](https://www.emlinter.com/solutions/outlook-background-generator): Bulletproof VML background images.
+- [Outlook-Ready HTML](https://www.emlinter.com/solutions/outlook-ready-html): Fix Outlook spacing and rendering issues.
+- [Pixel Converter](https://www.emlinter.com/solutions/pixel-converter): px to em, rem, pt, vh, inch, cm, mm, and paper sizes.
+
+## Editor & Templates
+- [Visual Editor](https://www.emlinter.com/visual-editor): No-code drag-and-drop HTML email editor.
+- [Email Templates](https://www.emlinter.com/templates): Free responsive HTML email template library.
+
+## Resources
+- [Blog](https://www.emlinter.com/resources/blog): Email development insights and tutorials.
+- [Products](https://www.emlinter.com/resources/products): Premium templates and kits.
+- [How It Works](https://www.emlinter.com/resources/how-it-works): Guides and walkthroughs.
+- [FAQ](https://www.emlinter.com/resources/faq): Answers to common questions.
+- [Contact](https://www.emlinter.com/contact-us): Get in touch.
+
+## Legal
+- [Privacy Policy](https://www.emlinter.com/privacy-policy)
+- [Cookie Policy](https://www.emlinter.com/cookie-policy)
+- [Terms of Service](https://www.emlinter.com/terms)
+
+## Optional
+- [Sitemap](https://www.emlinter.com/sitemap.xml): Full URL list including live blog, template, and product pages.

@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 
-const Breadcrumbs: React.FC = () => {
-    const [activePage, setActivePage] = useState('');
+interface BreadcrumbsProps {
+    /** Server-provided path so the trail server-renders (crawlable) under client:load.
+        Falls back to window.location on the client when omitted. */
+    currentPath?: string;
+}
+
+const toActivePage = (pathname: string) =>
+    pathname === '/' ? 'home' : pathname.replace(/^\/+|\/+$/g, '');
+
+const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ currentPath }) => {
+    const [activePage, setActivePage] = useState(currentPath ? toActivePage(currentPath) : '');
 
     useEffect(() => {
-        const pathname = window.location.pathname;
-        if (pathname === '/') {
-            setActivePage('home');
-        } else {
-            setActivePage(pathname.replace(/^\/+|\/+$/g, ''));
-        }
-    }, []);
+        if (!currentPath) setActivePage(toActivePage(window.location.pathname));
+    }, [currentPath]);
 
     if (!activePage || activePage === 'home') return null;
 

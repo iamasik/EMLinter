@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HtmlMinifierPage from '../../components/pages/HtmlMinifierPage';
-import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is an HTML email minifier and why do I need one?', answer: 'An HTML email minifier compresses your email\'s HTML by removing comments, line breaks, and unnecessary whitespace without changing how the email renders. Gmail clips any email over 102KB, so minifying brings you under the limit and improves load time.' },
@@ -29,16 +28,8 @@ const softwareLd = {
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <HtmlMinifierPage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="Compress HTML to slip under Gmail's 102KB clip."
-      intro="A free online html email minifier built for email developers. Minify html, compress html, and shrink your campaign 20–45% in one click — without breaking Outlook fallbacks or inline styles."
-      links={[
-        { href: '/tools/beautify-code', label: 'HTML Email Beautifier' },
-        { href: '/tools/code-fix', label: 'HTML Email Linter' },
-        { href: '/tools', label: 'All Developer Tools' },
-      ]}
-    />
-  </HtmlMinifierPage>
+  {/* client:load (not client:only): HtmlMinifierPage is SSR-safe, so its hero, SEO
+      copy, and FAQ are server-rendered into the raw HTML (crawlable) then hydrated
+      for the interactive minifier. No SeoFallback needed — the real hero renders. */}
+  <HtmlMinifierPage client:load />
 </BaseLayout>

@@ -50,6 +50,8 @@ export interface Post {
     helpfulCount: number;
     notHelpfulCount: number;
     createdAt: any;
+    /** Optional edit timestamp; when present, used as JSON-LD dateModified for freshness signals. */
+    updatedAt?: any;
 }
 
 export interface SocialLink {

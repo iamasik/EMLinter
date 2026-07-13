@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SvgToPngPage from '../../components/pages/SvgToPngPage';
-import SeoFallback from '../../components/SeoFallback.astro';
 
 const faqSchema = [
   { question: 'What is an SVG viewer and how does this online tool work?', answer: 'This SVG viewer is a free, browser-based tool that lets you paste SVG code or upload an SVG file and instantly see a live preview. It doubles as an SVG editor for resizing, flipping, rotating, and recoloring, and as an SVG to PNG converter. Everything runs locally in your browser; nothing is uploaded to a server.' },
@@ -29,16 +28,5 @@ const softwareLd = {
   jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
-  <SvgToPngPage client:only="react">
-    <SeoFallback
-      slot="fallback"
-      heading="The free SVG viewer, editor & SVG to PNG converter."
-      intro="Paste SVG code or upload a file to preview it live, resize, flip, rotate, and recolor it, then export a crisp PNG at up to 4x — all in your browser, nothing uploaded."
-      links={[
-        { href: '/tools/html-minifier', label: 'HTML Minifier' },
-        { href: '/tools/beautify-code', label: 'HTML Beautifier' },
-        { href: '/tools', label: 'All Developer Tools' },
-      ]}
-    />
-  </SvgToPngPage>
+  <SvgToPngPage client:load />
 </BaseLayout>

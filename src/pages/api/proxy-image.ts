@@ -124,6 +124,12 @@ export const GET: APIRoute = async ({ url, request }) => {
         return new Response('Host not allowed', { status: 403 });
     }
 
+    // One deadline spanning every redirect hop AND the body read. Aborting the
+    // signal also aborts the response stream, so a slow-drip body can't hold the
+    // function open past this — clearing only after the headers arrive (as before)
+    // left the read loop with no timeout.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
     try {
         let currentUrl = parsed;
         let upstream: Response;
@@ -136,21 +142,15 @@ export const GET: APIRoute = async ({ url, request }) => {
                 return new Response('Too many redirects', { status: 502 });
             }
 
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 12000);
-            try {
-                upstream = await fetch(currentUrl.toString(), {
-                    signal: controller.signal,
-                    redirect: 'manual',
-                    headers: {
-                        // Some CDNs 403 requests without a browser-like UA / Accept.
-                        'User-Agent': 'Mozilla/5.0 (compatible; EMLinter/1.0; +https://emlinter.com)',
-                        Accept: 'image/*,*/*;q=0.8',
-                    },
-                });
-            } finally {
-                clearTimeout(timer);
-            }
+            upstream = await fetch(currentUrl.toString(), {
+                signal: controller.signal,
+                redirect: 'manual',
+                headers: {
+                    // Some CDNs 403 requests without a browser-like UA / Accept.
+                    'User-Agent': 'Mozilla/5.0 (compatible; EMLinter/1.0; +https://emlinter.com)',
+                    Accept: 'image/*,*/*;q=0.8',
+                },
+            });
 
             if (upstream.status >= 300 && upstream.status < 400 && upstream.headers.get('location')) {
                 const nextUrl = new URL(upstream.headers.get('location')!, currentUrl);
@@ -212,5 +212,7 @@ export const GET: APIRoute = async ({ url, request }) => {
         });
     } catch {
         return new Response('Failed to fetch image', { status: 502 });
+    } finally {
+        clearTimeout(timer);
     }
 };
