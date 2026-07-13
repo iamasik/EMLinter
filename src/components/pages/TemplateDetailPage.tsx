@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTemplateBySlug, updateTemplateRating } from '../../services/firebase';
+import { getTemplateBySlug } from '../../services/firebase';
 import type { Template } from '../../types';
 import { SpinnerIcon, DesktopIcon, MobileIcon, StarIcon, DownloadIcon, LitmusIcon, EmailOnAcidIcon, CodeIcon } from '../Icons';
 
@@ -34,7 +34,14 @@ const TemplateDetailPage: React.FC<{ slug: string }> = ({ slug }) => {
         if (hasRated || isSubmittingRating || !template) return;
         setIsSubmittingRating(true);
         try {
-            const { newAverage, newCount } = await updateTemplateRating(template.id, rating);
+            const res = await fetch('/api/rate-template', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ templateId: template.id, rating }),
+            });
+            const body = await res.json();
+            if (!res.ok) throw new Error(body?.error || 'Failed to submit rating.');
+            const { newAverage, newCount } = body as { newAverage: number; newCount: number };
             setTemplate(prev => prev ? { ...prev, averageRating: newAverage, numberOfRatings: newCount } : null);
             localStorage.setItem(`emlinter-rated-${template.id}`, 'true');
             setHasRated(true);

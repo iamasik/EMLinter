@@ -20,7 +20,6 @@ routes serve HTTP 200.
 - **React 19** for all UI (`@astrojs/react`). Astro files are thin route shells; all logic lives in `.tsx`.
 - **Tailwind CSS 3** via `@astrojs/tailwind` (compiled — there is no Tailwind CDN script).
 - **Firebase 12** (Firestore) for content (templates, posts, products, experts, app settings).
-- **`@google/genai`** (Gemini) for AI error explanations.
 - **react-markdown** + **rehype-raw** for rendering post/product content.
 - Node **>= 22.12.0** required.
 
@@ -220,7 +219,6 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
   Firebase web config is inline and public — safe to commit. **These getters are now called both
   client-side (in components) and server-side (in detail shells + `sitemap.xml.ts`)** — the Firebase web
   SDK runs fine in Node, so keep them isomorphic (no `window`/`document` references).
-- `geminiService.ts` — `getErrorExplanation(error, fullHtml)` via Gemini `gemini-2.5-flash`.
 - `htmlValidator.ts`, `htmlBeautifier.ts`, `htmlMinifier.ts`, `colorAnalyzer.ts` — pure client-side
   logic, no network.
 
@@ -240,11 +238,14 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
 
 ## Environment
 
-- **`PUBLIC_GEMINI_API_KEY`** — read in `geminiService.ts` as `import.meta.env.PUBLIC_GEMINI_API_KEY`.
-  It **must** keep the `PUBLIC_` prefix: the Gemini call runs in the browser (components hydrate
-  `client:only`), and Astro only exposes `PUBLIC_`-prefixed vars to client code. Set it in `.env`
-  (gitignored). Without it, AI explanations return a "not set" message instead of throwing.
 - Firebase config is inline in `firebase.ts` (public web keys), not env-driven.
+- **`FIREBASE_SERVICE_ACCOUNT_KEY`** (server-only, no `PUBLIC_` prefix) — the full JSON contents of a
+  Firebase service-account key, read by `src/services/firebaseAdmin.ts` (`firebase-admin`, not the
+  client SDK). All Firestore *writes* (`contactMessages`, template ratings, post votes) go through this
+  module from server-only API routes (`src/pages/api/contact.ts`, `rate-template.ts`, `vote-post.ts`) so
+  they aren't gated only by Firestore Security Rules on a publicly-known web config. `firebase.ts` /
+  `firebaseAdmin.ts` no longer export any client-callable write functions — see `firestore.rules` at the
+  repo root (paste into the Firebase console; not auto-deployed) for the rules that deny client writes.
 
 ## Conventions when making changes
 
@@ -277,5 +278,5 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
    `curl -s localhost:4321/tools/html-minifier | grep -oE '<title>[^<]*</title>|BreadcrumbList|og:type'`.
    Also spot-check `/sitemap.xml` (URL count), `/robots.txt`, and a bad URL (expect HTTP 404). Detail-page
    meta needs network + Firebase to populate; without it the shell serves the generic fallback title.
-4. Firebase-backed pages need network + a valid project; Gemini features need `PUBLIC_GEMINI_API_KEY`.
-   If either is unavailable, note it rather than claiming the feature was exercised end-to-end.
+4. Firebase-backed pages need network + a valid project. If unavailable, note it rather than claiming
+   the feature was exercised end-to-end.

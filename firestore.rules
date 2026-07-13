@@ -1,0 +1,64 @@
+rules_version = '2';
+
+// Reference rules for the EMLinter Firestore database.
+//
+// This repo has no `firebase.json` / Firebase CLI project wired up, so these rules are
+// NOT auto-deployed. Paste this file's contents into:
+//   Firebase console -> your project -> Firestore Database -> Rules -> publish
+// (or set up the Firebase CLI and run `firebase deploy --only firestore:rules`).
+//
+// All writes to app data now go through firebase-admin (src/services/firebaseAdmin.ts),
+// called only from server-side Astro API routes (src/pages/api/contact.ts,
+// rate-template.ts, vote-post.ts). The admin SDK authenticates as a trusted service
+// account and is NOT subject to these rules — so it keeps working even though every
+// collection below denies client writes. The point of these rules is to close the
+// bypass where the public Firebase web config (visible in the client bundle) could
+// otherwise be used to write directly via the client SDK or the Firestore REST API,
+// skipping hCaptcha / validation entirely.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public read-only content collections.
+    match /templates/{templateId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /OurExperts/{expertId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /VideoGuide/{guideId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Contact form submissions — written only by /api/contact via the admin SDK after
+    // hCaptcha verification. No client should ever read or write this collection.
+    match /contactMessages/{messageId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Deny anything not explicitly matched above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

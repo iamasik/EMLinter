@@ -19,7 +19,7 @@ This app is an Astro 6 SSR shell wrapping React. Every route is two files: a Rea
 Path: `src/components/pages/<ComponentName>.tsx`
 
 - Use relative imports only — the `@/*` alias is NOT configured.
-- It hydrates client-side, so `window`, `localStorage`, Firebase, and Gemini are all available.
+- It hydrates client-side, so `window`, `localStorage`, and Firebase are all available.
 - For links, use `<a href="...">` (map home to `/`, else `/<page>`). Use `navigate()` from
   `src/lib/navigate.ts` only for imperative navigation from an event handler.
 - Reuse styling classes from `global.css` (`.card`, `.btn-primary`, `.container-wide`, `.gradient-text`,
@@ -80,4 +80,4 @@ Add a row to the route-map table in `CLAUDE.md` (URL | Astro shell | React compo
 ## 5. Verify
 
 Run `npm run build` (must exit 0 and print `Complete!`). Then `npm run dev` and open the new URL —
-expect HTTP 200. If the page uses Firebase or Gemini, note that those need network / `PUBLIC_GEMINI_API_KEY`.
+expect HTTP 200. If the page uses Firebase, note that it needs network access.

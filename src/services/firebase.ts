@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs, query, where, limit, doc, getDoc, runTransaction, orderBy, updateDoc, increment, addDoc, serverTimestamp } from "firebase/firestore";
-import type { Template, VideoGuide, Post, Expert, AppSettings, Product, ContactMessage } from '../types';
+import { getFirestore, collection, getDocs, query, where, limit, doc, getDoc, orderBy } from "firebase/firestore";
+import type { Template, VideoGuide, Post, Expert, AppSettings, Product } from '../types';
 
 // Firebase web config lives in env (PUBLIC_-prefixed so it is available both client-side
 // and in the server-side detail shells / sitemap that also call these getters).
@@ -44,29 +44,8 @@ export async function getTemplateBySlug(slug: string): Promise<Template | null> 
     return { id: d.id, ...d.data() } as Template;
 }
 
-export async function updateTemplateRating(
-    templateId: string,
-    newRating: number
-): Promise<{ newAverage: number; newCount: number }> {
-    const templateRef = doc(db, 'templates', templateId);
-    try {
-        const { newAverage, newCount } = await runTransaction(db, async (transaction) => {
-            const templateDoc = await transaction.get(templateRef);
-            if (!templateDoc.exists()) throw new Error("Document does not exist!");
-            const data = templateDoc.data();
-            const currentAverage = data.averageRating || 0;
-            const currentCount = data.numberOfRatings || 0;
-            const newCount = currentCount + 1;
-            const newAverage = ((currentAverage * currentCount) + newRating) / newCount;
-            transaction.update(templateRef, { averageRating: newAverage, numberOfRatings: newCount });
-            return { newAverage, newCount };
-        });
-        return { newAverage, newCount };
-    } catch (e) {
-        console.error("Transaction failed: ", e);
-        throw e;
-    }
-}
+// Rating writes go through POST /api/rate-template (firebase-admin), not this client
+// SDK — see src/services/firebaseAdmin.ts.
 
 export async function getVideoGuides(): Promise<VideoGuide[]> {
     const guidesCol = collection(db, 'VideoGuide');
@@ -98,16 +77,8 @@ export async function getRecommendedPosts(): Promise<Post[]> {
     return postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Post));
 }
 
-export async function updatePostVoteCount(postId: string, voteType: 'helpful' | 'not-helpful'): Promise<void> {
-    const postRef = doc(db, 'posts', postId);
-    const fieldToUpdate = voteType === 'helpful' ? 'helpfulCount' : 'notHelpfulCount';
-    try {
-        await updateDoc(postRef, { [fieldToUpdate]: increment(1) });
-    } catch (e) {
-        console.error("Vote update failed: ", e);
-        throw e;
-    }
-}
+// Vote writes go through POST /api/vote-post (firebase-admin), not this client SDK —
+// see src/services/firebaseAdmin.ts.
 
 export async function getExperts(): Promise<Expert[]> {
     const expertsCol = collection(db, 'OurExperts');
@@ -140,29 +111,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     return { id: d.id, ...d.data() } as Product;
 }
 
-/**
- * Persist a contact-form submission to the `contactMessages` collection.
- * `status` and `openedBy` are seeded with defaults; an admin flips them later
- * (from the Firebase console or a future admin UI). `createdAt` uses the server
- * clock so ordering is trustworthy regardless of the client's local time.
- *
- * NOTE: this must only be called from the server (see /api/contact) *after*
- * hCaptcha verification — the API route is the spam gate, not this function.
- */
-export async function submitContactMessage(
-    data: Pick<ContactMessage, 'fullName' | 'email' | 'subject' | 'message'>
-): Promise<string> {
-    const messagesCol = collection(db, 'contactMessages');
-    const docRef = await addDoc(messagesCol, {
-        fullName: data.fullName,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        status: 'unread' as const,
-        openedBy: 'Unassigned',
-        createdAt: serverTimestamp(),
-    });
-    return docRef.id;
-}
+// Contact-form writes go through POST /api/contact (firebase-admin, gated by hCaptcha
+// verification), not this client SDK — see src/services/firebaseAdmin.ts.
 
 export { db };

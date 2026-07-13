@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { submitContactMessage } from '../../services/firebase';
+import { submitContactMessage } from '../../services/firebaseAdmin';
 
 export const prerender = false;
 

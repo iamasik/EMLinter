@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
-import { getPostBySlug, getRecommendedPosts, updatePostVoteCount } from '../../services/firebase';
+import { getPostBySlug, getRecommendedPosts } from '../../services/firebase';
 import type { Post } from '../../types';
 import { SpinnerIcon, ThumbUpIcon, ThumbDownIcon, TrendingUpIcon } from '../Icons';
 
@@ -73,7 +73,15 @@ const BlogPostPage: React.FC<{ slug: string }> = ({ slug }) => {
         setVotes(prev => ({ ...prev, [keyToUpdate]: prev[keyToUpdate] + 1 }));
         setVotedStatus(voteType);
         try {
-            await updatePostVoteCount(post.id, voteType);
+            const res = await fetch('/api/vote-post', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId: post.id, voteType }),
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body?.error || 'Failed to submit vote.');
+            }
             localStorage.setItem(`emlinter-voted-${post.id}`, voteType);
         } catch (error) {
             console.error(error);
