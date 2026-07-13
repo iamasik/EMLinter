@@ -12,6 +12,49 @@ import { getTemplateBySlug } from '../../services/firebase';
 import ActionInfoModal from '../modals/ActionInfoModal';
 
 /**
+ * Neutralizes the executable XSS vectors in template HTML that originates from a
+ * remote source (a template doc's `htmlFileUrl`) before it is injected into the
+ * same-origin preview iframe.
+ *
+ * The preview iframe uses `sandbox="allow-scripts allow-same-origin"`, a
+ * combination that does NOT sandbox: same-origin framed script can reach the
+ * parent document (and even remove its own sandbox attribute). Both flags are
+ * required by the editor — it reads `iframe.contentDocument` directly and
+ * injects its own control script — so the sandbox cannot be the boundary.
+ *
+ * A general-purpose sanitizer (e.g. DOMPurify) is deliberately NOT used here:
+ * it strips the exact constructs a real email template depends on — DOCTYPE,
+ * Outlook `<!--[if mso]>` conditional comments, VML namespaces, <meta>/<link>,
+ * Mailchimp `*|MERGE|*` comment blocks, and custom attributes like `mc:edit`.
+ * Instead we do a minimal, string-level strip (no DOM round-trip, so email
+ * scaffolding is preserved byte-for-byte) of only the things that can execute:
+ *   - <script> elements
+ *   - <iframe>/<object>/<embed> elements (never valid email; script vectors)
+ *   - inline on* event-handler attributes
+ *   - javascript: URIs in href/src-style attributes
+ *
+ * This is defense-in-depth on top of the deny-all Firestore write rules
+ * (firestore.rules) that curate the template collection — not the primary
+ * control. A determined bypass of a regex strip is possible; the write rules
+ * are what actually keep template docs from being tampered with.
+ */
+function sanitizeRemoteTemplateHtml(html: string): string {
+    return html
+        // <script>…</script> (incl. attributes / multiline) and any stray opener.
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi, '')
+        .replace(/<\/?script\b[^>]*>/gi, '')
+        // <iframe>/<object>/<embed> — no legitimate email use, can execute script.
+        .replace(/<(iframe|object|embed)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+        .replace(/<\/?(iframe|object|embed)\b[^>]*>/gi, '')
+        // Inline event-handler attributes: on…="…" / '…' / unquoted.
+        .replace(/\son[a-z]+\s*=\s*"[^"]*"/gi, '')
+        .replace(/\son[a-z]+\s*=\s*'[^']*'/gi, '')
+        .replace(/\son[a-z]+\s*=\s*[^\s"'>]+/gi, '')
+        // javascript: URIs in href/src/background attributes → neutralized.
+        .replace(/(\s(?:href|src|background|xlink:href)\s*=\s*)(["'])\s*javascript:[^"']*\2/gi, '$1$2#$2');
+}
+
+/**
  * Converts an RGB color string to a HEX string.
  * This is crucial because browsers often serialize computed styles to RGB.
  * @param rgb The RGB color string (e.g., "rgb(255, 0, 0)").
@@ -181,7 +224,9 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         if (!response.ok) {
                             throw new Error(`Failed to fetch template HTML: ${response.statusText}`);
                         }
-                        const htmlContent = await response.text();
+                        const rawHtml = await response.text();
+                        // Remote template HTML is untrusted (see sanitizeRemoteTemplateHtml).
+                        const htmlContent = sanitizeRemoteTemplateHtml(rawHtml);
                         setHistory({ stack: [htmlContent], index: 0 });
                         setTemplateHtml(htmlContent);
                     } else {

@@ -280,12 +280,41 @@ const HtmlToImagePage: React.FC = () => {
     // --- export: rendered DOM -> SVG <foreignObject> -> canvas -> PNG/JPG ---
     const download = useCallback(async () => {
         setError(null);
-        const doc = iframeRef.current?.contentDocument;
+        setExporting(true);
+
+        // Render a fresh, detached iframe from the CURRENT htmlCode/cssCode/viewport
+        // instead of reading the visible preview iframe. The preview reloads on a
+        // 200ms debounce after typing or a viewport toggle, so reading it directly
+        // can capture a stale document (e.g. still mobile-width right after switching
+        // to Desktop) while svgW below already reflects the new viewport — exporting
+        // a narrower/mobile-collapsed layout stretched into a desktop-sized canvas.
+        // Building our own iframe guarantees the measured/cloned document always
+        // matches the viewport we're about to export at.
+        const exportFrame = document.createElement('iframe');
+        exportFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+        exportFrame.style.position = 'fixed';
+        exportFrame.style.top = '-99999px';
+        exportFrame.style.left = '-99999px';
+        exportFrame.style.width = `${viewportWidth(viewport)}px`;
+        exportFrame.style.border = '0';
+        document.body.appendChild(exportFrame);
+
+        let doc: Document | null;
+        try {
+            doc = await new Promise<Document | null>((resolve) => {
+                exportFrame.onload = () => resolve(exportFrame.contentDocument);
+                exportFrame.srcdoc = buildSrcDoc(htmlCode, cssCode, viewport);
+            });
+        } catch {
+            doc = null;
+        }
+
         if (!doc?.body) {
+            document.body.removeChild(exportFrame);
+            setExporting(false);
             setError('Preview is not ready yet. Try again in a moment.');
             return;
         }
-        // Re-measure the live preview so the export matches exactly what's on screen.
         const box = contentBox(doc);
         // The foreignObject's media queries evaluate against ITS width, so render it
         // at the exact same fixed viewport width as the live preview, then crop the
@@ -293,14 +322,27 @@ const HtmlToImagePage: React.FC = () => {
         const svgW = viewportWidth(viewport);
         const svgH = box.h;
 
-        setExporting(true);
-
-        // Clone the live-rendered document — not a tree rebuilt from htmlCode/cssCode
-        // state — so the export is pixel-identical to the preview. This keeps the real
-        // <html>/<body> elements (CSS rules targeting `body`/`html` still apply, unlike
-        // a bare wrapper <div>) and the exact width/styles already applied live.
+        // Clone the freshly-rendered document — not a tree rebuilt from raw strings —
+        // so the export keeps the real <html>/<body> elements (CSS rules targeting
+        // `body`/`html` still apply, unlike a bare wrapper <div>) and the exact
+        // widths/styles the export iframe just resolved.
         const docEl = doc.documentElement.cloneNode(true) as HTMLElement;
+        document.body.removeChild(exportFrame);
         const clonedBody = docEl.querySelector('body');
+
+        // `(max-device-width)`/`(min-device-width)` reference the physical screen, not
+        // the rendering viewport. Rasterizing through a detached SVG <foreignObject>
+        // has no real "device" backing it, so these device-width queries don't resolve
+        // against svgW the way max-width/min-width reliably do — they can match
+        // regardless of the intended export width, incorrectly firing mobile-only CSS
+        // (e.g. column stacking) on a desktop export. This export is already built
+        // around emulating a fixed viewport width, so treat device-width/device-height
+        // as equivalent to width/height for consistency with that model.
+        docEl.querySelectorAll('style').forEach((styleEl) => {
+            styleEl.textContent = (styleEl.textContent || '')
+                .replace(/\bdevice-width\b/gi, 'width')
+                .replace(/\bdevice-height\b/gi, 'height');
+        });
 
         // Rasterizing an SVG <foreignObject> can't load external URLs, so inline every
         // remote <img> as a base64 data URI first. Hosts that block cross-origin reads
@@ -392,7 +434,7 @@ const HtmlToImagePage: React.FC = () => {
             setError('Could not render this HTML to an image. Check that the markup is valid.');
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    }, [scale, format, viewport]);
+    }, [scale, format, viewport, htmlCode, cssCode]);
 
     const clearAll = () => {
         setHtmlCode('');
