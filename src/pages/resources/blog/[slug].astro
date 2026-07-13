@@ -27,6 +27,8 @@ const fbIntro = post?.seoMetaDescription
   || 'Read this article on HTML email development, deliverability, and design — practical tips for coding bulletproof, responsive campaigns that render everywhere.';
 
 let toIso = (v: any) => { try { return v?.toDate?.().toISOString(); } catch { return undefined; } };
+const publishedTime = post ? toIso(post.createdAt) : undefined;
+const modifiedTime = post ? (toIso((post as any).updatedAt) || toIso(post.createdAt)) : undefined;
 const jsonLd = post
   ? {
       '@context': 'https://schema.org',
@@ -54,6 +56,8 @@ const jsonLd = post
   description={description}
   ogType="article"
   ogImage={ogImage}
+  publishedTime={publishedTime}
+  modifiedTime={modifiedTime}
   jsonLd={jsonLd}
 >
   <BlogPostPage slug={slug!} client:only="react">

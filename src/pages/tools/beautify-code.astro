@@ -1,4 +1,5 @@
 ---
+export const prerender = true;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BeautifyCodePage from '../../components/pages/BeautifyCodePage';
 
@@ -10,11 +11,22 @@ const faqSchema = [
   { question: 'Is the beautifier free and does it upload my HTML?', answer: 'Free, no signup, no upload. Everything runs in your browser.' },
   { question: 'Can I beautify partial HTML snippets, or do I need a full document?', answer: 'Both work — full documents, table fragments, or single elements.' },
 ];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter HTML Email Beautifier',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'Free HTML email beautifier that reformats minified or messy email HTML into clean, indented code without breaking Outlook comments or inline styles.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 ---
 <BaseLayout
   title="HTML Email Beautifier — Free Code Formatter | EMLinter"
   description="Free HTML email beautifier. Turn minified or messy email HTML into clean, indented, debuggable code without breaking Outlook comments or inline styles."
   keywords="html email beautifier, html beautifier, html formatter, format html email, pretty print html email"
+  jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
   <BeautifyCodePage client:load />

@@ -1,4 +1,5 @@
 ---
+export const prerender = true;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import DesignCopierPage from '../../components/pages/DesignCopierPage';
 
@@ -10,11 +11,22 @@ const faqSchema = [
   { question: 'Can I edit the HTML before copying?', answer: 'Yes. Toggle View/Edit Code to open a side-by-side editor.' },
   { question: 'Is anything uploaded?', answer: 'No. Everything runs in your browser.' },
 ];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter HTML Email Design Copier',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'Free tool that copies a rendered HTML email as rich content you can paste straight into Gmail or Outlook, preserving images and links.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 ---
 <BaseLayout
   title="HTML Email Design Copier for Gmail & Outlook | EMLinter"
   description="Copy a rendered HTML email as rich content and paste it into Gmail or Outlook. Free design copier for quick one-off sends without re-exporting HTML."
   keywords="email design copier, copy html email to gmail, paste html into outlook, rich content email paste"
+  jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
   <DesignCopierPage client:load />

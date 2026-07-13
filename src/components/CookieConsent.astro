@@ -1,0 +1,50 @@
+---
+// Privacy-first cookie-consent banner (GDPR). Pure static markup + inline script — no
+// React island, so it works on prerendered CDN pages. Analytics (gtag.js) is only
+// loaded via window.__loadGA() after the visitor clicks "Accept" (see BaseLayout head).
+// The choice is stored in localStorage under `emlinter-cookie-consent` ('granted' | 'denied').
+---
+<div
+    id="cookie-consent"
+    role="region"
+    aria-label="Cookie consent"
+    hidden
+    class="fixed inset-x-0 bottom-0 z-[60] p-3 sm:p-4"
+>
+    <div class="glass mx-auto flex max-w-4xl flex-col gap-3 rounded-2xl p-4 shadow-glow sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+        <p class="flex-1 text-sm leading-relaxed text-ink-200">
+            We use cookies for anonymous analytics to understand how the toolkit is used.
+            No personal data is sold or shared. See our
+            <a href="/cookie-policy" class="gradient-text font-semibold underline underline-offset-2">Cookie Policy</a>.
+        </p>
+        <div class="flex shrink-0 gap-2">
+            <button id="cookie-decline" type="button" class="btn-secondary text-sm">Decline</button>
+            <button id="cookie-accept" type="button" class="btn-primary text-sm">Accept</button>
+        </div>
+    </div>
+</div>
+
+<script is:inline>
+    (function () {
+        var KEY = 'emlinter-cookie-consent';
+        var el = document.getElementById('cookie-consent');
+        if (!el) return;
+        var choice = null;
+        try { choice = localStorage.getItem(KEY); } catch (e) {}
+        // Only show the banner when no choice has been recorded yet.
+        if (choice !== 'granted' && choice !== 'denied') {
+            el.removeAttribute('hidden');
+        }
+        function decide(value) {
+            try { localStorage.setItem(KEY, value); } catch (e) {}
+            el.setAttribute('hidden', '');
+            if (value === 'granted' && typeof window.__loadGA === 'function') {
+                window.__loadGA();
+            }
+        }
+        var accept = document.getElementById('cookie-accept');
+        var decline = document.getElementById('cookie-decline');
+        if (accept) accept.addEventListener('click', function () { decide('granted'); });
+        if (decline) decline.addEventListener('click', function () { decide('denied'); });
+    })();
+</script>

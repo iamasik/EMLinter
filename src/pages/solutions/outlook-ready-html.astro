@@ -1,4 +1,5 @@
 ---
+export const prerender = true;
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import OutlookReadyHtmlPage from '../../components/pages/OutlookReadyHtmlPage';
 
@@ -10,11 +11,22 @@ const faqSchema = [
   { question: 'Does it preserve my existing inline styles?', answer: 'Yes. The sanitizer only adds margin/padding where you don\'t already have them.' },
   { question: 'Is this safe to run before sending?', answer: 'Yes. 100% client-side string transformation that leaves the structure of your HTML intact.' },
 ];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter Outlook HTML Sanitizer',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Web',
+  description: 'Free Outlook HTML sanitizer that auto-injects the 0.05pt padding fix on every table cell to eliminate ghost spacing and collapsing rows in Outlook for Windows.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
 ---
 <BaseLayout
   title="Outlook HTML Sanitizer — Fix Email Spacing | EMLinter"
   description="Free Outlook HTML sanitizer that auto-injects the 0.05pt padding fix on every table cell. Eliminate ghost spacing, collapsing rows & Outlook bugs in one click."
   keywords="outlook html sanitizer, fix outlook email, outlook email spacing, outlook padding fix, outlook email rendering"
+  jsonLd={softwareLd}
   faqSchema={faqSchema}
 >
   <OutlookReadyHtmlPage client:load />

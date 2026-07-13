@@ -16,8 +16,10 @@ routes serve HTTP 200.
 ## Tech stack
 
 - **Astro 6** (`output: 'server'`) with the **`@astrojs/vercel`** adapter (see `astro.config.mjs`) → the
-  build emits a Vercel serverless deployment (`.vercel/output/`), not a static site. (An earlier
-  `@astrojs/node` standalone setup was replaced; the `@astrojs/node` package has been removed.)
+  build emits a Vercel deployment (`.vercel/output/`). It is **hybrid**, not all-serverless: the static
+  Tier-1 shells opt into `export const prerender = true` and are baked to CDN HTML at build time (see the
+  "Prerendering" note under Hydration); only dynamic/`[slug]`/`sitemap`/`api` routes stay serverless.
+  (An earlier `@astrojs/node` standalone setup was replaced; the `@astrojs/node` package has been removed.)
 - **React 19** for all UI (`@astrojs/react`). Astro files are thin route shells; all logic lives in `.tsx`.
 - **Tailwind CSS 3** via `@astrojs/tailwind` (compiled — there is no Tailwind CDN script).
 - **Firebase 12** (Firestore) for content (templates, posts, products, experts, app settings).
@@ -100,6 +102,17 @@ higher-SEO path and is the default for any SSR-safe page. Pages currently on `cl
 `SeoFallback`** — the component's own `PageHero`/header is the server-rendered hero (a fallback would
 double the `<h1>`). `Breadcrumbs`/`Header` take a `currentPath` prop from `BaseLayout` so they render the
 correct trail/active state without reading `window`.
+
+> **Prerendering (Tier-1 static pages).** Because these shells fetch nothing server-side, each one sets
+> `export const prerender = true` in its frontmatter, so `output: 'server'` bakes them to **static CDN HTML
+> at build time** (`.vercel/output/static/…/index.html`) instead of invoking a serverless function per hit —
+> ~0ms TTFB, better CWV, lower cost. The `client:load` body is still server-rendered (at build), so the
+> crawlable hero/FAQ/link graph is preserved. Currently prerendered: `/`, all `/tools/*` (incl. both hubs),
+> the three Outlook `/solutions/*` generators, `/solutions/pixel-converter` hub, `/resources/how-it-works`,
+> `/contact-us`. **When you add a new Tier-1 shell, add `export const prerender = true`** as the first
+> frontmatter line. Everything that fetches per-request stays serverless (no `prerender`): the four detail
+> `[slug]` shells, `visual-editor/[slug]` + `pixel-converter/[slug]` (dynamic slug / per-request 404),
+> `sitemap.xml.ts`, and `/api/*`. Tier-2 `client:only` list pages are currently left serverless too.
 
 **Tier 2 — `client:only` + `SeoFallback` (dynamic/stateful pages).** Pages that read `localStorage`, query
 params, or Firebase during their initial render — `VisualEditorPage`, `TemplatesPage`/`TemplateDetailPage`,
@@ -305,8 +318,10 @@ clear the audit as part of a deliberate Astro 7 upgrade**, not on its own.
   `jsonLd`), and mounts it `client:load` if the component is SSR-safe (preferred — server-renders the body;
   omit `SeoFallback`) or `client:only="react"` + `<SeoFallback slot="fallback">` if not (see Hydration's two
   tiers). Add a row to the route map above, **and add the URL to `STATIC_ROUTES` in
-  `src/pages/sitemap.xml.ts`**. Keep title ≤ 60 / description ≤ 160 chars, suffix `| EMLinter` (see SEO
-  section). The `new-route` skill scaffolds this.
+  `src/pages/sitemap.xml.ts`**. If the shell fetches nothing server-side (a Tier-1 static page), also add
+  `export const prerender = true` as the first frontmatter line so it bakes to CDN HTML (see Hydration's
+  Prerendering note). Keep title ≤ 60 / description ≤ 160 chars, suffix `| EMLinter` (see SEO section).
+  The `new-route` skill scaffolds this.
 - **New dynamic detail route** → fetch its entity from Firebase **server-side in the shell frontmatter**
   (try/catch → generic fallback) to emit real meta + `jsonLd`; don't rely on client-side `document.title`
   patching alone. Mirror `resources/blog/[slug].astro`.
