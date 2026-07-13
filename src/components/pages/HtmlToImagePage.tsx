@@ -82,11 +82,17 @@ type EditorTab = 'html' | 'css';
 type Format = 'png' | 'jpg';
 type Viewport = 'mobile' | 'desktop';
 
-// Width the iframe/export viewport is forced to in desktop mode. Wide enough that
-// any typical mobile media query (max-width: 480–640px) never matches, so the
-// email renders its desktop layout. The body shrink-wraps (display:inline-block)
-// to the email's real width, which is what we crop the export to.
+// Fixed widths the iframe/export viewport are forced to. Desktop is wide enough
+// that any typical mobile media query (max-width: 480–640px) never matches, so
+// the email renders its desktop layout. Mobile is a real small-device width, so
+// mobile media queries reliably fire. In both cases the body is set to this exact
+// width and we crop the export to the email's real rendered content box.
 const DESKTOP_VW = 1280;
+const MOBILE_VW = 360;
+
+function viewportWidth(viewport: Viewport): number {
+    return viewport === 'desktop' ? DESKTOP_VW : MOBILE_VW;
+}
 
 // Orphan table elements (a bare <tr>, <td>, <tbody>… pasted without a wrapping
 // <table>) are silently dropped by the HTML parser, so they'd never render or
@@ -105,23 +111,20 @@ function wrapFragment(html: string): string {
     return html;
 }
 
-// Build a full document for the live iframe preview.
-// - mobile: body shrink-wraps to the content (display:inline-block), and the
-//   iframe element width drives the viewport, so mobile media queries fire.
-// - desktop: body is a wide fixed-width block so max-width breakpoints never
-//   match; a centered email (margin:auto / align=center) still centers within it.
+// Build a full document for the live iframe preview. The body (and the iframe
+// element itself, which drives the CSS layout viewport media queries evaluate
+// against) is always forced to a fixed width — DESKTOP_VW or MOBILE_VW — so
+// breakpoints fire consistently and a centered email (margin:auto / align=center)
+// still centers within it.
 function buildSrcDoc(html: string, css: string, viewport: Viewport): string {
-    const bodyStyle =
-        viewport === 'desktop'
-            ? `width:${DESKTOP_VW}px;`
-            : `display:inline-block;`;
+    const vw = viewportWidth(viewport);
     return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
 <style>
   html,body { margin:0; }
-  body { ${bodyStyle} }
+  body { width:${vw}px; }
 </style>
 <style>${css}</style>
 </head>
@@ -134,19 +137,12 @@ function lineCount(text: string): number {
     return Math.max(1, text.split('\n').length);
 }
 
-// Measure the real content bounding box inside the preview document.
-// In desktop mode the body is 1280px wide but the email itself is usually a
-// narrower table centered inside it — so we take the union of the direct
-// children's rects to find the actual left edge and width to crop to. In mobile
-// mode the body already shrink-wraps, so scrollWidth/Height is exact.
-function contentBox(
-    doc: Document,
-    viewport: Viewport
-): { x: number; y: number; w: number; h: number } {
+// Measure the real content bounding box inside the preview document. The body
+// is a fixed width (DESKTOP_VW or MOBILE_VW) but the email itself is usually a
+// narrower table, possibly centered inside it — so we take the union of the
+// direct children's rects to find the actual left edge and width to crop to.
+function contentBox(doc: Document): { x: number; y: number; w: number; h: number } {
     const body = doc.body;
-    if (viewport === 'mobile') {
-        return { x: 0, y: 0, w: Math.max(body.scrollWidth, 1), h: Math.max(body.scrollHeight, 1) };
-    }
     let left = Infinity;
     let right = -Infinity;
     let bottom = -Infinity;
@@ -237,15 +233,16 @@ const HtmlToImagePage: React.FC = () => {
     const measure = useCallback(() => {
         const doc = iframeRef.current?.contentDocument;
         if (!doc?.body) return;
-        const box = contentBox(doc, viewport);
+        const box = contentBox(doc);
         setDims(box);
-        // Fit the visible content box into the panel width. The iframe stays
-        // DESKTOP_VW wide internally (so the desktop layout is triggered) — this
-        // outer scale is purely visual and doesn't affect its media queries. We
-        // crop to the content box, so fit against box.w, not the full viewport.
+        // Fit the visible content box into the panel width. The iframe stays a
+        // fixed DESKTOP_VW/MOBILE_VW wide internally (so the right breakpoints
+        // trigger) — this outer scale is purely visual and doesn't affect its
+        // media queries. We crop to the content box, so fit against box.w, not
+        // the full viewport.
         const avail = (previewWrapRef.current?.clientWidth ?? box.w) - 24; // panel padding
         setPreviewScale(box.w > avail ? avail / box.w : 1);
-    }, [viewport]);
+    }, []);
 
     // re-measure when the panel resizes (desktop fit depends on panel width)
     useEffect(() => {
@@ -289,38 +286,31 @@ const HtmlToImagePage: React.FC = () => {
             return;
         }
         // Re-measure the live preview so the export matches exactly what's on screen.
-        const box = contentBox(doc, viewport);
-        // The foreignObject's media queries evaluate against ITS width. To keep the
-        // desktop layout we render it at the full desktop viewport width, then crop
-        // the canvas back to the email's real content box (box.x / box.w).
-        const svgW = viewport === 'desktop' ? DESKTOP_VW : box.w;
+        const box = contentBox(doc);
+        // The foreignObject's media queries evaluate against ITS width, so render it
+        // at the exact same fixed viewport width as the live preview, then crop the
+        // canvas back to the email's real content box (box.x / box.w).
+        const svgW = viewportWidth(viewport);
         const svgH = box.h;
 
         setExporting(true);
 
-        // Serialize the live-rendered body to well-formed XHTML (closes <br>, <img>, etc.)
-        // and carry the applied styles along so the export matches the preview exactly.
-        const host = document.createElement('div');
-        if (cssCode.trim()) {
-            const styleEl = document.createElement('style');
-            styleEl.textContent = cssCode;
-            host.appendChild(styleEl);
-        }
-        const content = document.createElement('div');
-        content.setAttribute(
-            'style',
-            viewport === 'desktop' ? `width:${DESKTOP_VW}px;` : 'display:inline-block;'
-        );
-        content.innerHTML = wrapFragment(htmlCode);
-        host.appendChild(content);
+        // Clone the live-rendered document — not a tree rebuilt from htmlCode/cssCode
+        // state — so the export is pixel-identical to the preview. This keeps the real
+        // <html>/<body> elements (CSS rules targeting `body`/`html` still apply, unlike
+        // a bare wrapper <div>) and the exact width/styles already applied live.
+        const docEl = doc.documentElement.cloneNode(true) as HTMLElement;
+        const clonedBody = docEl.querySelector('body');
 
         // Rasterizing an SVG <foreignObject> can't load external URLs, so inline every
         // remote <img> as a base64 data URI first. Hosts that block cross-origin reads
         // are skipped (that image just won't appear), but the rest export correctly.
-        const remoteImgs = Array.from(content.querySelectorAll('img')).filter((im) => {
-            const src = im.getAttribute('src') || '';
-            return /^https?:\/\//i.test(src);
-        });
+        const remoteImgs = clonedBody
+            ? Array.from(clonedBody.querySelectorAll('img')).filter((im) => {
+                  const src = im.getAttribute('src') || '';
+                  return /^https?:\/\//i.test(src);
+              })
+            : [];
         let missingImages = 0;
         await Promise.all(
             remoteImgs.map(async (im) => {
@@ -332,7 +322,7 @@ const HtmlToImagePage: React.FC = () => {
 
         let serialized: string;
         try {
-            serialized = new XMLSerializer().serializeToString(host);
+            serialized = new XMLSerializer().serializeToString(docEl);
         } catch {
             setExporting(false);
             setError('This HTML could not be parsed for export. Check for malformed tags.');
@@ -402,7 +392,7 @@ const HtmlToImagePage: React.FC = () => {
             setError('Could not render this HTML to an image. Check that the markup is valid.');
         };
         img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-    }, [htmlCode, cssCode, scale, format, viewport]);
+    }, [scale, format, viewport]);
 
     const clearAll = () => {
         setHtmlCode('');
@@ -593,11 +583,11 @@ const HtmlToImagePage: React.FC = () => {
                                     ref={iframeRef}
                                     title="HTML preview"
                                     srcDoc={srcDoc}
-                                    sandbox="allow-same-origin"
+                                    sandbox="allow-scripts allow-same-origin"
                                     onLoad={measure}
                                     scrolling="no"
                                     style={{
-                                        width: viewport === 'desktop' ? DESKTOP_VW : (dims ? dims.w : '100%'),
+                                        width: viewportWidth(viewport),
                                         height: dims ? dims.h : '100%',
                                         transform: `scale(${previewScale}) translateX(${dims ? -dims.x : 0}px)`,
                                         transformOrigin: 'top left',
