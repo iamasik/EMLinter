@@ -197,11 +197,13 @@ const allLd = [baseOrganization, baseWebsite, ...breadcrumbLd, ...userLd, ...faq
         {/* twitter:site/creator omitted until a verified @handle exists — a placeholder
             handle produces a broken/misattributed card. */}
 
-        <!-- Preload self-hosted, LCP-critical fonts (body + headings). Space Grotesk
-             backs every h1/h2 hero; Inter backs body copy. Both are same-origin now,
-             so no font-CDN preconnect is needed. -->
-        <link rel="preload" href="/font/Inter.woff2" as="font" type="font/woff2" crossorigin />
-        <link rel="preload" href="/font/SpaceGrotesk-Bold.woff2" as="font" type="font/woff2" crossorigin />
+        {/* Fonts (Inter body + Space Grotesk headings) are self-hosted and declared
+            in the render-blocking global.css @font-face rules with font-display:swap,
+            so the browser discovers and fetches them early on its own. We deliberately
+            do NOT add <link rel="preload"> for them: on fast/cached loads Chrome flags
+            the preload as "not used within a few seconds from the window's load event"
+            (a benign but noisy warning), and the manual preload also risks a duplicate
+            fetch. The @font-face swap path already renders text without blocking. */}
 
         <!-- Preconnect -->
         <link rel="preconnect" href="https://firestore.googleapis.com" />

@@ -65,7 +65,8 @@ A single layout renders `<head>` and the chrome. It is richer than a plain wrapp
   Update there if the domain changes.
 - Mounts `AnnouncementBar` (`client:only`) plus `Header`, `Breadcrumbs`, `Footer` (`client:load`, so their
   nav/link markup is server-rendered and crawlable — see Hydration) and `<slot />`s page content into
-  `<main class="container-wide ...">`. Also preloads two same-origin, LCP-critical fonts (see Styling).
+  `<main class="container-wide ...">`. Fonts are loaded via the global.css `@font-face` rules only — the
+  `<head>` deliberately does **not** `<link rel="preload">` them (see Styling for why).
 
 ### 2. `src/pages/**/*.astro` — one shell per route
 
@@ -278,8 +279,10 @@ Ported one-to-one from the React app and verified byte-identical (logic behavior
 - `tailwind.config.mjs` defines the design system: color scales `ink` (dark UI base, `ink-950`
   background), `brand` (pink/magenta), `accent` (violet); `display`/`sans`/`mono` font families
   (Inter, Space Grotesk, JetBrains Mono — **self-hosted** as `woff2` in `public/font/` via `@font-face`
-  in `global.css`, `font-display: swap`; the old render-blocking Google Fonts `@import` was removed and
-  `BaseLayout` preloads `Inter.woff2` + `SpaceGrotesk-Bold.woff2`. Inter & JetBrains Mono are single
+  in `global.css`, `font-display: swap`; the old render-blocking Google Fonts `@import` was removed.
+  `BaseLayout` does **not** `<link rel="preload">` the fonts — the render-blocking `global.css` `@font-face`
+  rules already trigger an early fetch, and a manual preload made Chrome log a benign but noisy "preloaded
+  but not used within a few seconds" warning (plus risked a duplicate fetch). Inter & JetBrains Mono are single
   variable files; Space Grotesk is static instances — there is no 600 cut, so `font-weight:600` maps to
   the Bold file. To add weights/families, drop the `woff2` in `public/font/` and add an `@font-face`);
   custom `backgroundImage`, `boxShadow` (`glow`, `card`), and animations (`fade-up`, `shimmer`, `pulse-slow`).
