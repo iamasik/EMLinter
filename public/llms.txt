@@ -29,6 +29,7 @@ Key facts:
 - [Outlook Button Generator](https://www.emlinter.com/solutions/outlook-button-generator): Bulletproof VML email buttons.
 - [Outlook Background Generator](https://www.emlinter.com/solutions/outlook-background-generator): Bulletproof VML background images.
 - [Outlook-Ready HTML](https://www.emlinter.com/solutions/outlook-ready-html): Fix Outlook spacing and rendering issues.
+- [EML File Viewer](https://www.emlinter.com/solutions/eml-file-viewer): Open .eml files online and export them as PDF, PNG, or JPG.
 - [Pixel Converter](https://www.emlinter.com/solutions/pixel-converter): px to em, rem, pt, vh, inch, cm, mm, and paper sizes.
 
 ## Editor & Templates

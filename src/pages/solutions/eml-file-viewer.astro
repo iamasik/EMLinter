@@ -1,0 +1,33 @@
+---
+export const prerender = true;
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmlFileViewerPage from '../../components/pages/EmlFileViewerPage';
+
+const faqSchema = [
+  { question: 'How do I open an .eml file online?', answer: 'Drag your .eml file onto the EML viewer, or click to browse and pick it. The message is parsed entirely in your browser and rendered exactly as it was sent — subject, body, formatting, and inline images. Nothing is uploaded, so you can open .eml files privately without installing Outlook, Thunderbird, or any desktop mail client.' },
+  { question: 'What is an EML file?', answer: 'An EML file is a single email saved in the standard MIME (RFC 822) format. When you export or "save as" a message from Gmail, Outlook, Apple Mail, Windows Mail, or Thunderbird, it is written as a .eml file containing the headers, the HTML and plain-text body, and any inline or attached images. Any compliant eml reader can open it.' },
+  { question: 'Which mail clients’ .eml files can this EML viewer open?', answer: 'All of them. The parser follows the MIME standard, so it opens .eml files exported from Gmail, Outlook (Windows, Mac, and Outlook.com), Apple Mail, Thunderbird, Windows Live Mail, Yahoo Mail, and any other standards-compliant client. Quoted-printable and base64 encodings, multipart bodies, and inline CID images are handled automatically.' },
+  { question: 'Can I convert an EML file to PDF, PNG, or JPG?', answer: 'Yes. After the email renders, use the Download buttons to save the message body as a PDF, PNG, or JPG. The PNG keeps a transparent background where the email has none; JPG and PDF render on a clean white background. The conversion happens locally in your browser, so your email never leaves your device.' },
+  { question: 'Is this EML reader free and private?', answer: 'Completely free, with no signup and no limits. Parsing the .eml file, rendering the preview, and exporting to PDF, PNG, or JPG all run client-side in your browser. Your message content is never uploaded, logged, or stored, which makes it safe for confidential emails.' },
+  { question: 'Why are some images missing when I open an .eml file?', answer: 'Inline images embedded in the message (CID attachments) always display and export correctly because they travel inside the .eml file. Images loaded from a remote server may be blocked by that host when exporting to an image or PDF. The live preview still shows them; a missing image in a download means its host blocks cross-origin access.' },
+];
+
+const softwareLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'EMLinter EML File Viewer',
+  applicationCategory: 'BusinessApplication',
+  operatingSystem: 'Web',
+  description: 'Free online EML file viewer that opens .eml emails from Gmail, Outlook, Apple Mail, and Thunderbird in the browser and exports them as PDF, PNG, or JPG.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<BaseLayout
+  title="EML File Viewer — Open .eml Files Online | EMLinter"
+  description="Free EML viewer online. Open .eml files from Gmail, Outlook, Apple Mail & Thunderbird right in your browser, then download the email as PDF, PNG, or JPG. Private, no upload."
+  keywords="eml file viewer, eml viewer online, open eml file, eml reader, eml viewer, free eml viewer, how to open eml file, open .eml file, eml file viewer tool"
+  jsonLd={softwareLd}
+  faqSchema={faqSchema}
+>
+  <EmlFileViewerPage client:load />
+</BaseLayout>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LitmusIcon, CursorClickIcon, ImageIcon, CheckCircleIcon, ScaleIcon } from '../Icons';
+import { LitmusIcon, CursorClickIcon, ImageIcon, CheckCircleIcon, ScaleIcon, MailIcon } from '../Icons';
 import PageHero from '../PageHero';
 import SeoFaq from '../SeoFaq';
 
@@ -31,6 +31,13 @@ const solutions = [
         description: 'Send a real test email straight to your own inbox to preview how Gmail, Outlook, and Apple Mail will actually render your campaign.',
         icon: LitmusIcon,
         tone: 'from-sky-500/20 to-sky-500/5 text-sky-300 ring-sky-400/20',
+    },
+    {
+        id: 'eml-file-viewer',
+        label: 'EML File Viewer',
+        description: 'Open any .eml file from Gmail, Outlook, Apple Mail, or Thunderbird in your browser, then download the email as a PDF, PNG, or JPG.',
+        icon: MailIcon,
+        tone: 'from-teal-500/20 to-teal-500/5 text-teal-300 ring-teal-400/20',
     },
     {
         id: 'pixel-converter',

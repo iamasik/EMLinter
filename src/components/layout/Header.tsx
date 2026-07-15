@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CoffeeIcon, MenuIcon, CloseIcon, WandIcon, ImageIcon, CheckCircleIcon, BookOpenIcon, NewspaperIcon, CursorClickIcon, CodeIcon, MoonIcon, QuestionMarkCircleIcon, LitmusIcon, ShoppingBagIcon, ScaleIcon, TemplateIcon } from '../Icons';
+import { CoffeeIcon, MenuIcon, CloseIcon, WandIcon, ImageIcon, CheckCircleIcon, BookOpenIcon, NewspaperIcon, CursorClickIcon, CodeIcon, MoonIcon, QuestionMarkCircleIcon, LitmusIcon, ShoppingBagIcon, ScaleIcon, TemplateIcon, MailIcon } from '../Icons';
 import ActionInfoModal from '../modals/ActionInfoModal';
 
 interface HeaderProps {
@@ -75,6 +75,7 @@ const Header: React.FC<HeaderProps> = ({ currentPath }) => {
                 { page: 'solutions/outlook-background-generator', label: 'Outlook Background', description: 'Bulletproof VML background images', icon: <ImageIcon className="w-5 h-5" /> },
                 { page: 'solutions/outlook-button-generator', label: 'Outlook Buttons', description: 'Bulletproof VML email buttons', icon: <CursorClickIcon className="w-5 h-5" /> },
                 { page: 'solutions/outlook-ready-html', label: 'Outlook Fixer', description: 'Fix Outlook spacing and rendering', icon: <CheckCircleIcon className="w-5 h-5" /> },
+                { page: 'solutions/eml-file-viewer', label: 'EML File Viewer', description: 'Open .eml files, save as PDF/PNG/JPG', icon: <MailIcon className="w-5 h-5" /> },
                 { page: 'solutions/pixel-converter', label: 'Pixel Converter', description: 'px to em, rem, pt, inch, cm & paper', icon: <ScaleIcon className="w-5 h-5" /> },
             ],
         },

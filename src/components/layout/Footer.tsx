@@ -27,6 +27,7 @@ const navColumns = [
             { href: '/solutions/outlook-background-generator', label: 'Outlook Backgrounds' },
             { href: '/solutions/outlook-ready-html', label: 'Outlook Sanitizer' },
             { href: '/solutions/html-email-test', label: 'HTML Email Test' },
+            { href: '/solutions/eml-file-viewer', label: 'EML File Viewer' },
             { href: '/visual-editor', label: 'Visual Editor' },
         ],
     },

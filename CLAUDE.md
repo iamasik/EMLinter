@@ -98,7 +98,7 @@ full markup — hero, SEO copy, **static FAQ answer text**, nav/link graph — i
 by non-JS crawlers: Bing, social scrapers, AI bots) and then hydrates for interactivity. This is the
 higher-SEO path and is the default for any SSR-safe page. Pages currently on `client:load`: `HomePage`,
 `ToolsHubPage`, `SolutionsHubPage`, all eight `/tools/*` pages, the three Outlook `/solutions/*` generators,
-`HowItWorksPage`, `ContactUsPage`, and `PixelConverterPage`. These shells are **one-liners with no
+`EmlFileViewerPage`, `HowItWorksPage`, `ContactUsPage`, and `PixelConverterPage`. These shells are **one-liners with no
 `SeoFallback`** — the component's own `PageHero`/header is the server-rendered hero (a fallback would
 double the `<h1>`). `Breadcrumbs`/`Header` take a `currentPath` prop from `BaseLayout` so they render the
 correct trail/active state without reading `window`.
@@ -108,8 +108,8 @@ correct trail/active state without reading `window`.
 > at build time** (`.vercel/output/static/…/index.html`) instead of invoking a serverless function per hit —
 > ~0ms TTFB, better CWV, lower cost. The `client:load` body is still server-rendered (at build), so the
 > crawlable hero/FAQ/link graph is preserved. Currently prerendered: `/`, all `/tools/*` (incl. both hubs),
-> the three Outlook `/solutions/*` generators, `/solutions/pixel-converter` hub, `/resources/how-it-works`,
-> `/contact-us`. **When you add a new Tier-1 shell, add `export const prerender = true`** as the first
+> the three Outlook `/solutions/*` generators, `/solutions/eml-file-viewer`, `/solutions/pixel-converter` hub,
+> `/resources/how-it-works`, `/contact-us`. **When you add a new Tier-1 shell, add `export const prerender = true`** as the first
 > frontmatter line. Everything that fetches per-request stays serverless (no `prerender`): the four detail
 > `[slug]` shells, `visual-editor/[slug]` + `pixel-converter/[slug]` (dynamic slug / per-request 404),
 > `sitemap.xml.ts`, and `/api/*`. Tier-2 `client:only` list pages are currently left serverless too.
@@ -166,6 +166,7 @@ conversions (see `src/lib/pixelConverters.ts`).
 | `/solutions/outlook-button-generator`        | `pages/solutions/outlook-button-generator.astro`     | `OutlookButtonGeneratorPage`     |
 | `/solutions/outlook-background-generator`    | `pages/solutions/outlook-background-generator.astro` | `OutlookBackgroundGeneratorPage` |
 | `/solutions/outlook-ready-html`              | `pages/solutions/outlook-ready-html.astro`           | `OutlookReadyHtmlPage`           |
+| `/solutions/eml-file-viewer`                 | `pages/solutions/eml-file-viewer.astro`              | `EmlFileViewerPage`              |
 | `/solutions/pixel-converter`                 | `pages/solutions/pixel-converter/index.astro`        | `PixelConverterHubPage`          |
 | `/solutions/pixel-converter/<slug>`          | `pages/solutions/pixel-converter/[slug].astro`       | `PixelConverterPage`             |
 | `/visual-editor`                             | `pages/visual-editor/index.astro`                    | `VisualEditorPage`               |

@@ -23,6 +23,7 @@ const STATIC_ROUTES: { path: string; priority: number; changefreq: string }[] = 
     { path: '/solutions/outlook-button-generator', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-background-generator', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/outlook-ready-html', priority: 0.8, changefreq: 'monthly' },
+    { path: '/solutions/eml-file-viewer', priority: 0.8, changefreq: 'monthly' },
     { path: '/solutions/pixel-converter', priority: 0.8, changefreq: 'monthly' },
     // All pixel-converter conversion pages, derived from the config.
     ...CONVERTERS.map((c) => ({
