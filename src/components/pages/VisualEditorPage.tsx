@@ -429,20 +429,15 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                 
                 .vibe-section-controls { top: 4px; left: 4px; }
                 .vibe-text-controls { top: 4px; right: 4px; left: auto; }
-                
-                .vibe-section-hover .vibe-section-controls,
-                .vibe-text-row-hover .vibe-text-controls { 
-                    display: flex; 
-                }
-                
+
                 .vibe-control-btn { background-color: #8B5CF6; color: white; border: none; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; font-size: 16px; font-weight: bold; line-height: 1; }
                 .vibe-control-btn:hover { background-color: #A78BFA; }
                 .vibe-control-btn:disabled { background-color: #4B5563; cursor: not-allowed; }
                 .vibe-control-btn svg { width: 16px; height: 16px; }
 
-                .vibe-section-controls { background-color: rgba(185, 28, 28, 0.85); }
-                .vibe-section-controls .vibe-control-btn { background-color: #B91C1C; }
-                .vibe-section-controls .vibe-control-btn:hover { background-color: #DC2626; }
+                .vibe-section-controls { background-color: rgba(20, 26, 42, 0.85); }
+                .vibe-section-controls .vibe-control-btn { background-color: #141a2a; }
+                .vibe-section-controls .vibe-control-btn:hover { background-color: #232b45; }
                 .vibe-section-controls .vibe-control-btn:disabled { background-color: #4B5563; }
 
                 .vibe-img, .vibe-text { cursor: pointer; transition: outline 0.2s; }
@@ -526,27 +521,7 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                     controls.innerHTML = \`${fullControlsHtml}\`;
                     
                     firstCell.prepend(controls);
-                    
-                    row.addEventListener('mouseenter', () => {
-                        row.classList.add(type === 'section' ? 'vibe-section-hover' : 'vibe-text-row-hover');
-                        const activeControls = firstCell.querySelector('.vibe-controls');
-                        if (!activeControls) return;
 
-                        const moveUpBtn = activeControls.querySelector('[data-action="move-up"]');
-                        const moveDownBtn = activeControls.querySelector('[data-action="move-down"]');
-
-                        if (moveUpBtn) {
-                            const prevSibling = row.previousElementSibling;
-                            moveUpBtn.disabled = !prevSibling || prevSibling.tagName !== 'TR';
-                        }
-                        if (moveDownBtn) {
-                            const nextSibling = row.nextElementSibling;
-                            moveDownBtn.disabled = !nextSibling || nextSibling.tagName !== 'TR';
-                        }
-                    });
-                    
-                    row.addEventListener('mouseleave', () => row.classList.remove('vibe-section-hover', 'vibe-text-row-hover'));
-                    
                     row.addEventListener('click', (e) => {
                         const actionTarget = e.target.closest('[data-action]');
                         if (actionTarget) {
@@ -593,7 +568,53 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         }
                     });
                 };
-                
+
+                // Nested .vibe-section/.vibe-text rows share overlapping boxes, so entering a
+                // deeply nested row also fires mouseenter on every ancestor row at once — with
+                // per-row listeners that showed every ancestor's controls stacked on top of each
+                // other. Instead, track a single hovered row via delegation and use closest() to
+                // resolve it to the innermost (most specific) row under the pointer.
+                let vibeHoverRow = null;
+
+                function setVibeRowHovered(row, hovered) {
+                    if (!row) return;
+                    const firstCell = row.querySelector('td, th');
+                    const controls = firstCell && firstCell.querySelector('.vibe-controls');
+                    if (!controls) return;
+
+                    const isSection = controls.classList.contains('vibe-section-controls');
+                    row.classList.toggle(isSection ? 'vibe-section-hover' : 'vibe-text-row-hover', hovered);
+                    controls.style.display = hovered ? 'flex' : 'none';
+
+                    if (hovered) {
+                        const moveUpBtn = controls.querySelector('[data-action="move-up"]');
+                        const moveDownBtn = controls.querySelector('[data-action="move-down"]');
+                        if (moveUpBtn) {
+                            const prevSibling = row.previousElementSibling;
+                            moveUpBtn.disabled = !prevSibling || prevSibling.tagName !== 'TR';
+                        }
+                        if (moveDownBtn) {
+                            const nextSibling = row.nextElementSibling;
+                            moveDownBtn.disabled = !nextSibling || nextSibling.tagName !== 'TR';
+                        }
+                    }
+                }
+
+                document.addEventListener('mouseover', (e) => {
+                    const row = e.target.closest('[data-vibe-initialized]');
+                    if (row === vibeHoverRow) return;
+                    setVibeRowHovered(vibeHoverRow, false);
+                    vibeHoverRow = row;
+                    setVibeRowHovered(vibeHoverRow, true);
+                });
+
+                document.addEventListener('mouseout', (e) => {
+                    if (vibeHoverRow && !e.relatedTarget) {
+                        setVibeRowHovered(vibeHoverRow, false);
+                        vibeHoverRow = null;
+                    }
+                });
+
                 function initImage(img, id) {
                     img.dataset.vibeImgId = id;
                     const parentLink = img.closest('a');
