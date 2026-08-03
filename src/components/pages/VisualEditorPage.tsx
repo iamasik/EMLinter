@@ -440,6 +440,11 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                 .vibe-control-btn:disabled { background-color: #4B5563; cursor: not-allowed; }
                 .vibe-control-btn svg { width: 16px; height: 16px; }
 
+                .vibe-section-controls { background-color: rgba(185, 28, 28, 0.85); }
+                .vibe-section-controls .vibe-control-btn { background-color: #B91C1C; }
+                .vibe-section-controls .vibe-control-btn:hover { background-color: #DC2626; }
+                .vibe-section-controls .vibe-control-btn:disabled { background-color: #4B5563; }
+
                 .vibe-img, .vibe-text { cursor: pointer; transition: outline 0.2s; }
                 .vibe-img:hover, .vibe-text:hover { outline: 2px dashed #8B5CF6; outline-offset: 2px; }
                 .vibe-bg { position: relative; }
