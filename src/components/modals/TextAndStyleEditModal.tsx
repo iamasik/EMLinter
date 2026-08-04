@@ -22,6 +22,33 @@ const emailSafeFonts = [
     { name: 'Lucida Console', value: "'Lucida Console', Monaco, monospace" },
 ];
 
+// Normalizes any valid CSS color (rgb/rgba/hsl/named/short-hex) to a 6-digit hex string,
+// since the color picker input and the saved email style must always be hex.
+const toHexColor = (color: string): string => {
+    const trimmed = (color || '').trim();
+    const hexMatch = trimmed.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+    if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        return `#${hex.toLowerCase()}`;
+    }
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return '#000000';
+        // Flatten onto white first so a translucent color still yields a solid hex swatch.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, 1, 1);
+        ctx.fillStyle = trimmed;
+        ctx.fillRect(0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        return `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+    } catch {
+        return '#000000';
+    }
+};
+
 const defaultFormData = {
     styles: {
         fontFamily: 'sans-serif',
@@ -87,7 +114,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                     fontFamily: matchedFont ? matchedFont.value : fontFamilyValue,
                     fontSize: parseFloat(styleObj['font-size']) || defaultFormData.styles.fontSize,
                     lineHeight: parseFloat(styleObj['line-height']) || defaultFormData.styles.lineHeight,
-                    color: styleObj['color'] || defaultFormData.styles.color,
+                    color: toHexColor(styleObj['color'] || defaultFormData.styles.color),
                     textAlign: styleObj['text-align'] || defaultFormData.styles.textAlign,
                     fontWeight: styleObj['font-weight'] || defaultFormData.styles.fontWeight,
                     fontStyle: styleObj['font-style'] || defaultFormData.styles.fontStyle,
@@ -132,7 +159,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         newStyleMap.set('font-family', finalFontFamily);
         newStyleMap.set('font-size', `${formData.styles.fontSize}px`);
         newStyleMap.set('line-height', `${formData.styles.lineHeight}px`);
-        newStyleMap.set('color', formData.styles.color);
+        newStyleMap.set('color', toHexColor(formData.styles.color));
         newStyleMap.set('text-align', formData.styles.textAlign);
         newStyleMap.set('font-weight', formData.styles.fontWeight);
         newStyleMap.set('font-style', formData.styles.fontStyle);
