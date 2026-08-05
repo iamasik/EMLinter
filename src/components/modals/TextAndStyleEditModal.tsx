@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { CloseIcon, BoldIcon, ItalicIcon, UnderlineIcon, CodeIcon, LinkIcon } from '../Icons';
 import LinkEditModal from './LinkEditModal';
+import ColorPickerInput from '../ColorPickerInput';
 
 // Web-safe fonts with a display name and the actual CSS font-family value
 const emailSafeFonts = [
@@ -346,10 +347,10 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className={labelClass}>Text Color</label>
-                                            <div className="flex items-center bg-gray-900 border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-pink-500">
-                                                <input type="color" value={formData.styles.color} onChange={e => setFormData(d => ({ ...d, styles: { ...d.styles, color: e.target.value }}))} className="w-10 h-10 p-1 bg-transparent border-0 cursor-pointer" />
-                                                <input type="text" value={formData.styles.color} onChange={e => setFormData(d => ({...d, styles: {...d.styles, color: e.target.value}}))} className="w-full px-3 text-sm text-white bg-transparent focus:outline-none" />
-                                            </div>
+                                            <ColorPickerInput
+                                                value={formData.styles.color}
+                                                onChange={hex => setFormData(d => ({ ...d, styles: { ...d.styles, color: hex } }))}
+                                            />
                                         </div>
                                         <div>
                                             <label className={labelClass}>Text Align</label>
