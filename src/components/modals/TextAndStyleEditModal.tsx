@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { CloseIcon, BoldIcon, ItalicIcon, UnderlineIcon, CodeIcon, LinkIcon } from '../Icons';
+import { CloseIcon, BoldIcon, ItalicIcon, UnderlineIcon, CodeIcon, LinkIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon } from '../Icons';
 import LinkEditModal from './LinkEditModal';
 import ColorPickerInput from '../ColorPickerInput';
 
@@ -360,8 +360,10 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
 
     if (!isOpen || !editData) return null;
     
-    const inputClass = "w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none";
-    const labelClass = "block text-sm font-medium text-gray-400 mb-1";
+    const inputClass = "w-full px-2.5 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none";
+    const labelClass = "block text-[11px] font-medium text-gray-500 mb-1";
+    const sectionLabelClass = "text-[11px] font-bold uppercase tracking-wider text-gray-500";
+    const toggleBtnClass = (active: boolean) => `w-full py-1.5 rounded-md border text-sm transition-colors ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-600 text-gray-300 hover:bg-gray-700'}`;
     const toolbarButtonClass = "p-2 rounded-md hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
 
     return (
@@ -389,58 +391,66 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                     <div style={previewStyle} dangerouslySetInnerHTML={{ __html: formData.content }} />
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-gray-700/40 p-4 rounded-lg space-y-4">
-                                    <h3 className="font-semibold text-gray-200">Typography</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-gray-700/40 p-3.5 rounded-lg space-y-3">
+                                    <h3 className={sectionLabelClass}>Typography</h3>
                                     <div>
                                         <label className={labelClass}>Font Family</label>
                                         <select value={formData.styles.fontFamily} onChange={e => setFormData(d => ({ ...d, styles: { ...d.styles, fontFamily: e.target.value }}))} className={inputClass}>
                                             {emailSafeFonts.map(font => <option key={font.name} value={font.value} style={{ fontFamily: font.value }}>{font.name}</option>)}
                                         </select>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-2">
                                         <div>
-                                            <label className={labelClass}>Font Size (px)</label>
+                                            <label className={labelClass}>Size (px)</label>
                                             <input type="number" value={formData.styles.fontSize} onChange={e => setFormData(d => ({...d, styles: {...d.styles, fontSize: parseFloat(e.target.value) || 0}}))} className={inputClass} />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>Line Height (px)</label>
+                                            <label className={labelClass}>Line (px)</label>
                                             <input type="number" value={formData.styles.lineHeight} onChange={e => setFormData(d => ({...d, styles: {...d.styles, lineHeight: parseFloat(e.target.value) || 0}}))} className={inputClass} />
                                         </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className={labelClass}>Font Weight</label>
-                                            <select value={formData.styles.fontWeight} onChange={e => setFormData(d => ({...d, styles: {...d.styles, fontWeight: e.target.value}}))} className={inputClass}>
-                                                <option value="normal">Normal</option><option value="bold">Bold</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={labelClass}>Font Style</label>
-                                            <select value={formData.styles.fontStyle} onChange={e => setFormData(d => ({...d, styles: {...d.styles, fontStyle: e.target.value}}))} className={inputClass}>
-                                                <option value="normal">Normal</option><option value="italic">Italic</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className={labelClass}>Text Transform</label>
-                                            <select value={formData.styles.textTransform} onChange={e => setFormData(d => ({...d, styles: {...d.styles, textTransform: e.target.value}}))} className={inputClass}>
-                                                <option value="none">None</option>
-                                                <option value="uppercase">Uppercase</option>
-                                                <option value="capitalize">Capitalize</option>
-                                                <option value="lowercase">Lowercase</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={labelClass}>Letter Spacing (px)</label>
+                                            <label className={labelClass}>Spacing (px)</label>
                                             <input type="number" step="0.1" value={formData.styles.letterSpacing} onChange={e => setFormData(d => ({...d, styles: {...d.styles, letterSpacing: parseFloat(e.target.value) || 0}}))} className={inputClass} />
                                         </div>
                                     </div>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <div>
+                                            <label className={labelClass}>Weight</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(d => ({...d, styles: {...d.styles, fontWeight: d.styles.fontWeight === 'bold' ? 'normal' : 'bold'}}))}
+                                                className={toggleBtnClass(formData.styles.fontWeight === 'bold') + ' font-bold'}
+                                                title="Toggle bold"
+                                            >
+                                                B
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Style</label>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(d => ({...d, styles: {...d.styles, fontStyle: d.styles.fontStyle === 'italic' ? 'normal' : 'italic'}}))}
+                                                className={toggleBtnClass(formData.styles.fontStyle === 'italic') + ' italic'}
+                                                title="Toggle italic"
+                                            >
+                                                I
+                                            </button>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Transform</label>
+                                            <select value={formData.styles.textTransform} onChange={e => setFormData(d => ({...d, styles: {...d.styles, textTransform: e.target.value}}))} className={inputClass}>
+                                                <option value="none">None</option>
+                                                <option value="uppercase">UPPER</option>
+                                                <option value="capitalize">Capitalize</option>
+                                                <option value="lowercase">lower</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="bg-gray-700/40 p-4 rounded-lg space-y-4">
-                                    <h3 className="font-semibold text-gray-200">Color & Alignment</h3>
-                                    <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-700/40 p-3.5 rounded-lg space-y-3">
+                                    <h3 className={sectionLabelClass}>Color & Alignment</h3>
+                                    <div className="grid grid-cols-[1fr_auto] gap-2">
                                         <div>
                                             <label className={labelClass}>Text Color</label>
                                             <ColorPickerInput
@@ -449,68 +459,97 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                             />
                                         </div>
                                         <div>
-                                            <label className={labelClass}>Text Align</label>
-                                            <select value={formData.styles.textAlign} onChange={e => setFormData(d => ({...d, styles: {...d.styles, textAlign: e.target.value}}))} className={inputClass}>
-                                                <option value="left">Left</option><option value="center">Center</option><option value="right">Right</option><option value="justify">Justify</option>
-                                            </select>
+                                            <label className={labelClass}>Align</label>
+                                            <div className="grid grid-cols-4 gap-0.5 bg-gray-900 border border-gray-600 rounded-md p-1">
+                                                {([
+                                                    { value: 'left', Icon: AlignLeftIcon },
+                                                    { value: 'center', Icon: AlignCenterIcon },
+                                                    { value: 'right', Icon: AlignRightIcon },
+                                                    { value: 'justify', Icon: AlignJustifyIcon },
+                                                ] as const).map(({ value, Icon }) => (
+                                                    <button
+                                                        key={value}
+                                                        type="button"
+                                                        title={value.charAt(0).toUpperCase() + value.slice(1)}
+                                                        onClick={() => setFormData(d => ({ ...d, styles: { ...d.styles, textAlign: value } }))}
+                                                        className={`flex items-center justify-center w-7 h-7 rounded transition-colors ${formData.styles.textAlign === value ? 'bg-violet-600 text-white' : 'text-gray-400 hover:bg-gray-700 hover:text-white'}`}
+                                                    >
+                                                        <Icon className="w-4 h-4" />
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                    <h3 className="font-semibold text-gray-200 pt-2">Spacing (Padding)</h3>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                        {(['top', 'right', 'bottom', 'left'] as const).map(side => (
-                                            <div key={side}>
-                                                <label className={labelClass}>{side.charAt(0).toUpperCase() + side.slice(1)} (px)</label>
-                                                <input type="number" value={formData.styles.padding[side]} onChange={e => setFormData(d => ({...d, styles: {...d.styles, padding: {...d.styles.padding, [side]: parseFloat(e.target.value) || 0 }}}))} className={inputClass} />
+
+                                    <div>
+                                        <label className={labelClass}>Padding (px)</label>
+                                        <div className="grid grid-cols-4 gap-1.5">
+                                            {(['top', 'right', 'bottom', 'left'] as const).map(side => (
+                                                <div key={side} className="flex items-center bg-gray-900 border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-pink-500 pl-1.5">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase flex-shrink-0" title={side}>{side[0]}</span>
+                                                    <input
+                                                        type="number"
+                                                        value={formData.styles.padding[side]}
+                                                        onChange={e => setFormData(d => ({...d, styles: {...d.styles, padding: {...d.styles.padding, [side]: parseFloat(e.target.value) || 0 }}}))}
+                                                        className="w-full min-w-0 py-1.5 pl-1 pr-1.5 text-sm text-white bg-transparent focus:outline-none"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className={labelClass + ' mb-0'}>Border</label>
+                                            <div className="flex gap-1">
+                                                {(['top', 'right', 'bottom', 'left'] as const).map(side => {
+                                                    const active = activeBorderSide === side;
+                                                    const hasBorder = formData.styles.border[side].style !== 'none';
+                                                    return (
+                                                        <button
+                                                            key={side}
+                                                            type="button"
+                                                            title={side.charAt(0).toUpperCase() + side.slice(1)}
+                                                            onClick={() => setActiveBorderSide(side)}
+                                                            className={`relative w-7 h-7 text-[11px] font-bold uppercase rounded-md border transition-colors ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-600 text-gray-300 hover:bg-gray-700'}`}
+                                                        >
+                                                            {side[0]}
+                                                            {hasBorder && (
+                                                                <span
+                                                                    className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full ring-1 ring-gray-800"
+                                                                    style={{ backgroundColor: formData.styles.border[side].color }}
+                                                                />
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
-                                        ))}
-                                    </div>
-                                    <h3 className="font-semibold text-gray-200 pt-2">Border</h3>
-                                    <div className="grid grid-cols-4 gap-1.5">
-                                        {(['top', 'right', 'bottom', 'left'] as const).map(side => {
-                                            const active = activeBorderSide === side;
-                                            const hasBorder = formData.styles.border[side].style !== 'none';
-                                            return (
-                                                <button
-                                                    key={side}
-                                                    type="button"
-                                                    onClick={() => setActiveBorderSide(side)}
-                                                    className={`relative px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-600 text-gray-300 hover:bg-gray-700'}`}
-                                                >
-                                                    {side.charAt(0).toUpperCase() + side.slice(1)}
-                                                    {hasBorder && (
-                                                        <span
-                                                            className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full ring-1 ring-black/30"
-                                                            style={{ backgroundColor: formData.styles.border[side].color }}
-                                                        />
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                    <div className="grid grid-cols-[3.5rem_1fr_7.5rem] gap-2 items-center">
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            title="Width (px)"
-                                            value={activeBorder.width}
-                                            onChange={e => updateActiveBorder({ width: parseFloat(e.target.value) || 0 })}
-                                            className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                        />
-                                        <select
-                                            value={activeBorder.style}
-                                            onChange={e => {
-                                                const newStyle = e.target.value;
-                                                updateActiveBorder({ style: newStyle, width: newStyle !== 'none' && activeBorder.width === 0 ? 1 : activeBorder.width });
-                                            }}
-                                            className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                        >
-                                            <option value="none">None</option>
-                                            <option value="solid">Solid</option>
-                                            <option value="dashed">Dashed</option>
-                                            <option value="dotted">Dotted</option>
-                                            <option value="double">Double</option>
-                                        </select>
-                                        <ColorPickerInput value={activeBorder.color} onChange={hex => updateActiveBorder({ color: hex })} />
+                                        </div>
+                                        <div className="grid grid-cols-[3rem_1fr_7.5rem] gap-1.5 items-center">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                title="Width (px)"
+                                                value={activeBorder.width}
+                                                onChange={e => updateActiveBorder({ width: parseFloat(e.target.value) || 0 })}
+                                                className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                            />
+                                            <select
+                                                value={activeBorder.style}
+                                                onChange={e => {
+                                                    const newStyle = e.target.value;
+                                                    updateActiveBorder({ style: newStyle, width: newStyle !== 'none' && activeBorder.width === 0 ? 1 : activeBorder.width });
+                                                }}
+                                                className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                            >
+                                                <option value="none">None</option>
+                                                <option value="solid">Solid</option>
+                                                <option value="dashed">Dashed</option>
+                                                <option value="dotted">Dotted</option>
+                                                <option value="double">Double</option>
+                                            </select>
+                                            <ColorPickerInput value={activeBorder.color} onChange={hex => updateActiveBorder({ color: hex })} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
