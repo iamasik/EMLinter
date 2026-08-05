@@ -135,6 +135,34 @@ function getEnclosingStyledSpan(selection: Selection | null, editorEl: HTMLEleme
     return span as HTMLSpanElement;
 }
 
+// Parses a raw style="..." attribute string into ordered [prop, value] pairs, preserving the
+// literal value text. We deliberately never touch element.style for this: the moment anything
+// reads or writes the CSSOM (.style.cssText, .style.setProperty, etc.), the browser normalizes
+// color values (e.g. "#ee0000") to "rgb(238, 0, 0)" — which is what we want to avoid saving.
+function parseStyleAttr(styleAttr: string | null): [string, string][] {
+    return (styleAttr || '')
+        .split(';')
+        .map(decl => decl.trim())
+        .filter(Boolean)
+        .map(decl => {
+            const idx = decl.indexOf(':');
+            return [decl.slice(0, idx).trim().toLowerCase(), decl.slice(idx + 1).trim()] as [string, string];
+        })
+        .filter(([prop]) => !!prop);
+}
+
+function stringifyStyleDecls(decls: [string, string][]): string {
+    return decls.length ? decls.map(([prop, value]) => `${prop}: ${value}`).join('; ') + ';' : '';
+}
+
+// Sets or removes a single property on an element's raw style attribute, bypassing the CSSOM.
+function setStyleAttrProp(el: HTMLElement, prop: string, value: string | null) {
+    const decls = parseStyleAttr(el.getAttribute('style')).filter(([p]) => p !== prop.toLowerCase());
+    if (value !== null) decls.push([prop.toLowerCase(), value]);
+    if (decls.length > 0) el.setAttribute('style', stringifyStyleDecls(decls));
+    else el.removeAttribute('style');
+}
+
 // A link's dedicated inner <span> is what carries its per-run style (see the vibe-text
 // blueprint: <a style="..."><span style="...">text</span></a>). Creates it if missing.
 function ensureInnerSpan(link: HTMLAnchorElement): HTMLSpanElement {
@@ -143,6 +171,17 @@ function ensureInnerSpan(link: HTMLAnchorElement): HTMLSpanElement {
     const span = document.createElement('span');
     while (link.firstChild) span.appendChild(link.firstChild);
     link.appendChild(span);
+
+    // A freshly-established <a><span> pairing needs its own text-decoration so the
+    // browser/email-client's native link underline doesn't leak through unexpectedly.
+    // Mirror the link's own decoration if it already declares one, otherwise default to none.
+    const existingDecoration = parseStyleAttr(link.getAttribute('style')).find(([prop]) => prop === 'text-decoration')?.[1];
+    if (existingDecoration) {
+        setStyleAttrProp(span, 'text-decoration', existingDecoration);
+    } else {
+        setStyleAttrProp(link, 'text-decoration', 'none');
+        setStyleAttrProp(span, 'text-decoration', 'none');
+    }
     return span;
 }
 
@@ -364,7 +403,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             for (let i = 0; i < spans.length; i++) {
                 const current = spans[i] as HTMLElement;
                 const next = current.nextElementSibling as HTMLElement;
-                if (next && next.tagName === 'SPAN' && current.style.cssText === next.style.cssText) {
+                if (next && next.tagName === 'SPAN' && current.getAttribute('style') === next.getAttribute('style')) {
                     while (next.firstChild) current.appendChild(next.firstChild);
                     next.remove();
                     changed = true;
@@ -376,8 +415,11 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                 const htmlSpan = span as HTMLElement;
                 if (htmlSpan.childNodes.length === 1 && htmlSpan.firstElementChild?.tagName === 'SPAN') {
                     const child = htmlSpan.firstElementChild as HTMLElement;
-                    const combined = [...new Set([...htmlSpan.style.cssText.split(';').filter(s=>s.trim()), ...child.style.cssText.split(';').filter(s=>s.trim())])];
-                    htmlSpan.style.cssText = combined.join('; ');
+                    // Child declarations win on conflict (they're the more specific/inner style).
+                    const merged = new Map(parseStyleAttr(htmlSpan.getAttribute('style')));
+                    parseStyleAttr(child.getAttribute('style')).forEach(([prop, value]) => merged.set(prop, value));
+                    const combinedStyle = stringifyStyleDecls(Array.from(merged.entries()));
+                    if (combinedStyle) htmlSpan.setAttribute('style', combinedStyle); else htmlSpan.removeAttribute('style');
                     while(child.firstChild) htmlSpan.appendChild(child.firstChild);
                     htmlSpan.removeChild(child);
                     changed = true;
@@ -474,14 +516,15 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         const enclosingLink = getEnclosingLink(selection);
         const selectedText = selection.toString();
 
-        const setProp = (el: HTMLElement) => {
-            if (value === null) el.style.removeProperty(prop);
-            else el.style.setProperty(prop, value);
-        };
+        const setProp = (el: HTMLElement) => setStyleAttrProp(el, prop, value);
 
         if (enclosingLink && (selection.isCollapsed || selectedText.trim() === (enclosingLink.textContent || '').trim())) {
-            setProp(enclosingLink);
-            setProp(ensureInnerSpan(enclosingLink));
+            // Links always carry an explicit text-decoration (default "none") so turning
+            // underline off restores that override instead of removing it — otherwise the
+            // email client's native link underline would show back through.
+            const linkValue = (prop === 'text-decoration' && value === null) ? 'none' : value;
+            setStyleAttrProp(enclosingLink, prop, linkValue);
+            setStyleAttrProp(ensureInnerSpan(enclosingLink), prop, linkValue);
         } else if (!selection.isCollapsed) {
             const enclosingSpan = getEnclosingStyledSpan(selection, editorRef.current);
             if (enclosingSpan && selectedText.trim() === (enclosingSpan.textContent || '').trim()) {
@@ -541,9 +584,8 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             const link = document.createElement('a');
             link.setAttribute('href', finalUrl);
             if (linkTarget) link.setAttribute('target', linkTarget);
-            const span = document.createElement('span');
-            span.appendChild(fragment);
-            link.appendChild(span);
+            link.appendChild(fragment);
+            ensureInnerSpan(link);
             freshRange.insertNode(link);
             const newRange = document.createRange();
             newRange.selectNodeContents(link);
@@ -612,9 +654,9 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                 .tase-editor a { background-color: rgba(250, 204, 21, 0.25); border-radius: 2px; }
                 .tase-editor a:hover { background-color: rgba(250, 204, 21, 0.4); }
             `}</style>
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] overflow-y-auto p-4" onClick={onClose}>
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] overflow-y-auto p-2 sm:p-4" onClick={onClose}>
                 <div className="flex min-h-full items-start sm:items-center justify-center">
-                    <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col p-6" onClick={(e) => e.stopPropagation()}>
+                    <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-between mb-4 flex-shrink-0">
                             <h2 className="text-xl sm:text-2xl font-semibold text-gray-200">Edit Text & Style</h2>
                             <button onClick={onClose} className="text-gray-500 hover:text-white"><CloseIcon className="w-6 h-6" /></button>
@@ -795,7 +837,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                             <div>
                                 <div className={`bg-gray-900 border-t border-l border-r border-gray-600 rounded-t-md text-gray-300 ${isSourceMode ? 'opacity-70' : ''}`}>
                                     {/* Ribbon row 1: run-level text formatting */}
-                                    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-gray-700/70">
+                                    <div className="flex flex-wrap items-center gap-x-1 gap-y-2 px-2 py-1.5 border-b border-gray-700/70">
                                         <div className="flex items-center gap-0.5">
                                             <button type="button" onClick={toggleBold} disabled={isSourceMode} className={ribbonBtnClass(activeFormats.bold)} title="Bold selected text">
                                                 <BoldIcon className="w-4 h-4 fill-current" />
@@ -808,67 +850,79 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                             </button>
                                         </div>
 
-                                        <div className="w-px h-5 bg-gray-700 mx-1.5" />
+                                        <div className="hidden sm:block w-px h-5 bg-gray-700 mx-1.5" />
 
                                         <div className="flex items-center gap-1.5" title="Text color for selected text">
                                             <TextColorIcon className="w-4 h-4 text-gray-400 flex-shrink-0" barColor={activeFormats.color} />
-                                            <div className="w-32">
+                                            <div className="w-24 sm:w-32">
                                                 <ColorPickerInput value={activeFormats.color} onChange={handleColorChange} />
                                             </div>
                                         </div>
 
-                                        <div className="w-px h-5 bg-gray-700 mx-1.5" />
+                                        <div className="hidden sm:block w-px h-5 bg-gray-700 mx-1.5" />
 
                                         <button type="button" onClick={handleClearStyle} disabled={isSourceMode || !canClearStyle} className={ribbonBtnClass(false)} title="Clear style on selected text">
                                             <EraserIcon className="w-4 h-4" />
                                         </button>
 
-                                        <div className="flex-1" />
-
-                                        <button type="button" onClick={() => setIsSourceMode(!isSourceMode)} className={ribbonBtnClass(isSourceMode)} title="View Source">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                if (!isSourceMode) {
+                                                    syncContentFromEditor();
+                                                }
+                                                setIsSourceMode(v => !v);
+                                            }}
+                                            className={ribbonBtnClass(isSourceMode) + ' ml-auto'}
+                                            title="View Source"
+                                        >
                                             <CodeIcon className="w-4 h-4" />
                                         </button>
                                     </div>
 
                                     {/* Ribbon row 2: link controls (replaces the old separate Edit Link modal) */}
-                                    <div className={`flex flex-wrap items-center gap-2 px-2 py-1.5 ${isSourceMode ? 'pointer-events-none opacity-50' : ''}`}>
-                                        <LinkIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                                        <input
-                                            type="text"
-                                            value={linkUrl}
-                                            onChange={e => setLinkUrl(e.target.value)}
-                                            onFocus={saveSelection}
-                                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyLink(); } }}
-                                            placeholder="Select text, then type or paste a URL…"
-                                            className="flex-1 min-w-[10rem] px-2.5 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                        />
-                                        <select
-                                            value={linkTarget}
-                                            onChange={e => setLinkTarget(e.target.value)}
-                                            onFocus={saveSelection}
-                                            className="px-2 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
-                                        >
-                                            <option value="_blank">New Tab</option>
-                                            <option value="_self">Same Tab</option>
-                                        </select>
-                                        <button
-                                            type="button"
-                                            onClick={handleApplyLink}
-                                            disabled={!linkUrl.trim()}
-                                            className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <LinkIcon className="w-3.5 h-3.5" />
-                                            {isLinkActive ? 'Update' : 'Apply'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={handleUnlink}
-                                            disabled={!isLinkActive}
-                                            className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                        >
-                                            <UnlinkIcon className="w-3.5 h-3.5" />
-                                            Unlink
-                                        </button>
+                                    <div className={`flex flex-col sm:flex-row sm:items-center gap-2 px-2 py-1.5 ${isSourceMode ? 'pointer-events-none opacity-50' : ''}`}>
+                                        <div className="flex items-center gap-2">
+                                            <LinkIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                                            <input
+                                                type="text"
+                                                value={linkUrl}
+                                                onChange={e => setLinkUrl(e.target.value)}
+                                                onFocus={saveSelection}
+                                                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyLink(); } }}
+                                                placeholder="Select text, then type or paste a URL…"
+                                                className="flex-1 sm:min-w-[10rem] px-2.5 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={linkTarget}
+                                                onChange={e => setLinkTarget(e.target.value)}
+                                                onFocus={saveSelection}
+                                                className="flex-shrink-0 px-2 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                            >
+                                                <option value="_blank">New Tab</option>
+                                                <option value="_self">Same Tab</option>
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={handleApplyLink}
+                                                disabled={!linkUrl.trim()}
+                                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1 text-sm font-semibold text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <LinkIcon className="w-3.5 h-3.5" />
+                                                {isLinkActive ? 'Update' : 'Apply'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={handleUnlink}
+                                                disabled={!isLinkActive}
+                                                className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-1 text-sm font-semibold text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <UnlinkIcon className="w-3.5 h-3.5" />
+                                                Unlink
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 {isSourceMode ? (

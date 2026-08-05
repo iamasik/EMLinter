@@ -561,9 +561,15 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                         const textTarget = e.target.closest('.vibe-text');
                         if (type === 'text' && textTarget && !e.target.closest('.vibe-controls')) {
                              e.preventDefault(); e.stopPropagation();
+                            // When the vibe-text element is also the row's first cell, the
+                            // move/duplicate/delete controls live inside it (see initRowControls'
+                            // firstCell.prepend(controls) above) — strip them from the captured
+                            // content so the editor never sees/re-saves that overlay markup.
+                            const contentClone = textTarget.cloneNode(true);
+                            contentClone.querySelectorAll('.vibe-controls').forEach(el => el.remove());
                             window.parent.postMessage({ type: 'vibe-text-click', textData: {
                                 id: textTarget.dataset.vibeTextId,
-                                content: textTarget.innerHTML,
+                                content: contentClone.innerHTML,
                                 style: textTarget.getAttribute('style') || ''
                             }}, '*');
                         }
@@ -740,7 +746,13 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                     } else if (data.type === 'vibe-text-style-update') {
                          const el = document.querySelector('[data-vibe-text-id="' + data.id + '"]');
                          if (el) {
+                            // The row's move/duplicate/delete overlay can live inside this same
+                            // element (see initRowControls' firstCell.prepend(controls)) — the
+                            // editor never sees or edits it, so preserve it across the rewrite
+                            // instead of letting the innerHTML replace wipe it out.
+                            const existingControls = el.querySelector(':scope > .vibe-controls');
                             el.innerHTML = data.content;
+                            if (existingControls) el.prepend(existingControls);
                             el.setAttribute('style', data.style);
                          }
                     } else if (data.type === 'vibe-bg-update') {
