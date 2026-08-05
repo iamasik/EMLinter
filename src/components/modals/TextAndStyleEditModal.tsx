@@ -653,6 +653,13 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             <style>{`
                 .tase-editor a { background-color: rgba(250, 204, 21, 0.25); border-radius: 2px; }
                 .tase-editor a:hover { background-color: rgba(250, 204, 21, 0.4); }
+                /* The app's own Tailwind preflight zeroes out ul/ol/li (list-style/margin/padding)
+                   for the app's own UI — but email content edited here is raw semantic HTML that
+                   expects normal browser list rendering. Restore it, scoped to just these two
+                   surfaces, so bullets/numbers show while editing/previewing. */
+                .tase-editor ul, .tase-preview ul { list-style: disc; margin: 1em 0; padding-left: 40px; }
+                .tase-editor ol, .tase-preview ol { list-style: decimal; margin: 1em 0; padding-left: 40px; }
+                .tase-editor li, .tase-preview li { display: list-item; }
             `}</style>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] overflow-y-auto p-2 sm:p-4" onClick={onClose}>
                 <div className="flex min-h-full items-start sm:items-center justify-center">
@@ -667,7 +674,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                             <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
                                 <h3 className="text-sm font-semibold text-gray-300 mb-2 text-center">Live Style Preview</h3>
                                 <div className="rounded min-h-[60px] flex items-center p-2" style={{ backgroundColor: previewBg }}>
-                                    <div style={previewStyle} dangerouslySetInnerHTML={{ __html: formData.content }} />
+                                    <div className="tase-preview" style={previewStyle} dangerouslySetInnerHTML={{ __html: formData.content }} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
