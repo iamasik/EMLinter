@@ -178,6 +178,22 @@ export const UnlinkIcon = ({ className }: { className?: string }) => (
     </svg>
 );
 
+export const TextColorIcon = ({ className, barColor = 'currentColor' }: { className?: string; barColor?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 16 16" fill="none">
+        <path d="M3 12.5L6.5 3h1L11 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M4.4 9h5.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <rect x="2" y="13.5" width="12" height="1.6" rx="0.4" fill={barColor} />
+    </svg>
+);
+
+export const EraserIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21L3.6 17.6a2 2 0 010-2.83l9.5-9.5a2 2 0 012.83 0l4.37 4.37a2 2 0 010 2.83L12.2 20.5a2 2 0 01-1.41.59H7z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8l5 5" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 21h9" />
+    </svg>
+);
+
 export const SaveIcon = ({ className }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012 2zm4 0v6h6V5" />

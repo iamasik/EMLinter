@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { CloseIcon, BoldIcon, ItalicIcon, UnderlineIcon, CodeIcon, LinkIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon } from '../Icons';
-import LinkEditModal from './LinkEditModal';
+import { CloseIcon, BoldIcon, ItalicIcon, UnderlineIcon, CodeIcon, LinkIcon, UnlinkIcon, TextColorIcon, EraserIcon, AlignLeftIcon, AlignCenterIcon, AlignRightIcon, AlignJustifyIcon } from '../Icons';
 import ColorPickerInput from '../ColorPickerInput';
 
 // Web-safe fonts with a display name and the actual CSS font-family value
@@ -72,6 +71,8 @@ const defaultFormData = {
     content: ''
 };
 
+const defaultActiveFormats = { bold: false, italic: false, underline: false, color: '#000000' };
+
 const BORDER_STYLE_KEYWORDS = ['none', 'hidden', 'dotted', 'dashed', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'];
 
 // Parses a border shorthand value ("1px solid #EE0000") into its width/style/color parts.
@@ -111,6 +112,40 @@ const parseBorderSide = (value: string | undefined): { width: number; style: str
     return { width, style, color };
 };
 
+// Finds the <a> tag enclosing the current selection's anchor point.
+function getEnclosingLink(selection: Selection | null): HTMLAnchorElement | null {
+    if (!selection || !selection.anchorNode) return null;
+    const { anchorNode } = selection;
+    if (anchorNode.nodeType === Node.ELEMENT_NODE) {
+        return (anchorNode as Element).closest('a');
+    }
+    return anchorNode.parentElement?.closest('a') ?? null;
+}
+
+// Finds the nearest styled <span> enclosing the selection's anchor point, ignoring
+// spans that belong to a link (those are handled through the link controls instead).
+function getEnclosingStyledSpan(selection: Selection | null, editorEl: HTMLElement | null): HTMLSpanElement | null {
+    if (!selection || !selection.anchorNode || !editorEl) return null;
+    const { anchorNode } = selection;
+    const startEl = anchorNode.nodeType === Node.ELEMENT_NODE ? (anchorNode as Element) : anchorNode.parentElement;
+    if (!startEl) return null;
+    const span = startEl.closest('span[style]');
+    if (!span || !editorEl.contains(span)) return null;
+    if (span.closest('a')) return null;
+    return span as HTMLSpanElement;
+}
+
+// A link's dedicated inner <span> is what carries its per-run style (see the vibe-text
+// blueprint: <a style="..."><span style="...">text</span></a>). Creates it if missing.
+function ensureInnerSpan(link: HTMLAnchorElement): HTMLSpanElement {
+    const existing = link.querySelector(':scope > span') as HTMLSpanElement | null;
+    if (existing) return existing;
+    const span = document.createElement('span');
+    while (link.firstChild) span.appendChild(link.firstChild);
+    link.appendChild(span);
+    return span;
+}
+
 interface TextAndStyleEditModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -126,8 +161,15 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
     const [formData, setFormData] = useState(defaultFormData);
     const [isSourceMode, setIsSourceMode] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
-    const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const savedRange = useRef<Range | null>(null);
     const [activeBorderSide, setActiveBorderSide] = useState<'top' | 'right' | 'bottom' | 'left'>('top');
+
+    // Inline "run" formatting state for whatever is currently selected inside the content editor.
+    const [activeFormats, setActiveFormats] = useState(defaultActiveFormats);
+    const [isLinkActive, setIsLinkActive] = useState(false);
+    const [canClearStyle, setCanClearStyle] = useState(false);
+    const [linkUrl, setLinkUrl] = useState('');
+    const [linkTarget, setLinkTarget] = useState('_blank');
 
     const activeBorder = formData.styles.border[activeBorderSide];
     const updateActiveBorder = (patch: Partial<typeof activeBorder>) => setFormData(d => ({
@@ -187,6 +229,12 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                 content: editData.content
             });
             setActiveBorderSide('top');
+            setActiveFormats(defaultActiveFormats);
+            setIsLinkActive(false);
+            setCanClearStyle(false);
+            setLinkUrl('');
+            setLinkTarget('_blank');
+            savedRange.current = null;
 
             if (editorRef.current && !isSourceMode) {
                 editorRef.current.innerHTML = editData.content;
@@ -194,10 +242,15 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
 
         } else {
             setFormData(defaultFormData);
-            setIsLinkModalOpen(false); // Reset on close
+            setActiveFormats(defaultActiveFormats);
+            setIsLinkActive(false);
+            setCanClearStyle(false);
+            setLinkUrl('');
+            setLinkTarget('_blank');
+            savedRange.current = null;
         }
     }, [isOpen, editData]);
-    
+
     useEffect(() => {
       // Only update the innerHTML if it's different from the state.
       // This prevents the cursor from jumping to the start on every input.
@@ -208,11 +261,11 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
 
     const handleSave = () => {
         if (!editData) return;
-        
+
         const finalContent = isSourceMode ? formData.content : editorRef.current?.innerHTML || '';
 
         const newStyleMap = new Map<string, string>();
-        
+
         let finalFontFamily = formData.styles.fontFamily;
         const genericKeywords = ['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'system-ui'];
         const lastPart = finalFontFamily.split(',').pop()?.trim().toLowerCase();
@@ -250,13 +303,13 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
 
         const declarations = Array.from(newStyleMap.entries())
             .map(([prop, val]) => `${prop}: ${val}`);
-        
+
         const styleString = declarations.join('; ') + (declarations.length > 0 ? ';' : '');
 
         onSave({ id: editData.id, style: styleString, content: finalContent });
         onClose();
     };
-    
+
     // Live preview needs a background that contrasts with the chosen text color —
     // a fixed white swatch makes white/light text invisible in the preview.
     const previewBg = useMemo(() => {
@@ -288,7 +341,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         borderBottom: formData.styles.border.bottom.style !== 'none' ? `${formData.styles.border.bottom.width}px ${formData.styles.border.bottom.style} ${formData.styles.border.bottom.color}` : 'none',
         borderLeft: formData.styles.border.left.style !== 'none' ? `${formData.styles.border.left.width}px ${formData.styles.border.left.style} ${formData.styles.border.left.color}` : 'none',
     }), [formData.styles]);
-    
+
     const cleanupAndNormalize = () => {
         const editor = editorRef.current;
         if (!editor) return;
@@ -315,7 +368,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                     while (next.firstChild) current.appendChild(next.firstChild);
                     next.remove();
                     changed = true;
-                    break; 
+                    break;
                 }
             }
             if (changed) continue;
@@ -332,7 +385,12 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                 }
             }
             if (changed) continue;
-            const emptySpans = editor.querySelectorAll('span:not([style]), span[style=""]');
+            // A link's dedicated inner span (<a><span>text</span></a>) is kept even when it
+            // carries no style of its own — it's the anchor point for future run styling.
+            const emptySpans = Array.from(editor.querySelectorAll('span:not([style]), span[style=""]')).filter(span => {
+                const parent = span.parentElement;
+                return !(parent && parent.tagName === 'A' && parent.children.length === 1 && parent.firstElementChild === span);
+            });
             if (emptySpans.length > 0) {
                  emptySpans.forEach(span => {
                     const parent = span.parentNode;
@@ -345,36 +403,215 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         editor.normalize();
     };
 
-    const handleStyleCommand = (command: 'bold' | 'italic' | 'underline') => {
-        if (isSourceMode || !editorRef.current) return;
-        editorRef.current.focus();
-        document.execCommand(command, false, null);
-        cleanupAndNormalize();
-        setFormData(d => ({ ...d, content: editorRef.current?.innerHTML || '' }));
+    const syncContentFromEditor = () => {
+        if (editorRef.current) {
+            const html = editorRef.current.innerHTML;
+            setFormData(d => ({ ...d, content: html }));
+        }
     };
 
-    const handleLinkModalSave = (data: { id: string, content: string }) => {
-        setFormData(d => ({...d, content: data.content }));
-        setIsLinkModalOpen(false);
+    const saveSelection = () => {
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            if (editorRef.current && editorRef.current.contains(range.commonAncestorContainer)) {
+                savedRange.current = range.cloneRange();
+            }
+        }
+    };
+
+    const restoreSelection = () => {
+        if (savedRange.current && editorRef.current) {
+            editorRef.current.focus();
+            const selection = window.getSelection();
+            if (selection) {
+                selection.removeAllRanges();
+                selection.addRange(savedRange.current);
+            }
+        }
+    };
+
+    // Re-reads the current selection to sync the toolbar's active states (bold/italic/
+    // underline/color, whether it's inside a link, whether it can be "cleared").
+    const refreshToolbarState = () => {
+        if (isSourceMode || !editorRef.current) return;
+        saveSelection();
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0 || !editorRef.current.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+            return;
+        }
+
+        const link = getEnclosingLink(selection);
+        setIsLinkActive(!!link);
+        if (link) {
+            setLinkUrl(link.getAttribute('href') || '');
+            setLinkTarget(link.getAttribute('target') || '_blank');
+        }
+        setCanClearStyle(!link && !!getEnclosingStyledSpan(selection, editorRef.current));
+
+        const range = selection.getRangeAt(0);
+        const node = range.commonAncestorContainer;
+        const el = (node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement) || editorRef.current;
+        const computed = window.getComputedStyle(el);
+        const fw = computed.fontWeight;
+        setActiveFormats({
+            bold: fw === 'bold' || parseInt(fw, 10) >= 700,
+            italic: computed.fontStyle === 'italic',
+            underline: computed.textDecorationLine.includes('underline'),
+            color: toHexColor(computed.color),
+        });
+    };
+
+    // Core handler behind Bold/Italic/Underline/Color. Updates in place when the selection
+    // exactly matches an existing link or styled span, otherwise wraps the selection in a
+    // new <span> carrying the property (letting cleanupAndNormalize merge/split runs).
+    const applyFormat = (prop: string, value: string | null) => {
+        if (isSourceMode || !editorRef.current) return;
+        restoreSelection();
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+        const range = selection.getRangeAt(0);
+        const enclosingLink = getEnclosingLink(selection);
+        const selectedText = selection.toString();
+
+        const setProp = (el: HTMLElement) => {
+            if (value === null) el.style.removeProperty(prop);
+            else el.style.setProperty(prop, value);
+        };
+
+        if (enclosingLink && (selection.isCollapsed || selectedText.trim() === (enclosingLink.textContent || '').trim())) {
+            setProp(enclosingLink);
+            setProp(ensureInnerSpan(enclosingLink));
+        } else if (!selection.isCollapsed) {
+            const enclosingSpan = getEnclosingStyledSpan(selection, editorRef.current);
+            if (enclosingSpan && selectedText.trim() === (enclosingSpan.textContent || '').trim()) {
+                setProp(enclosingSpan);
+            } else {
+                const fragment = range.extractContents();
+                const span = document.createElement('span');
+                setProp(span);
+                span.appendChild(fragment);
+                range.insertNode(span);
+                const newRange = document.createRange();
+                newRange.selectNodeContents(span);
+                selection.removeAllRanges();
+                selection.addRange(newRange);
+            }
+        } else {
+            return;
+        }
+
+        cleanupAndNormalize();
+        syncContentFromEditor();
+        refreshToolbarState();
+    };
+
+    const toggleBold = () => applyFormat('font-weight', activeFormats.bold ? null : 'bold');
+    const toggleItalic = () => applyFormat('font-style', activeFormats.italic ? null : 'italic');
+    const toggleUnderline = () => applyFormat('text-decoration', activeFormats.underline ? null : 'underline');
+    const handleColorChange = (hex: string) => applyFormat('color', hex);
+
+    const handleApplyLink = () => {
+        if (isSourceMode || !editorRef.current) return;
+        const url = linkUrl.trim();
+        if (!url) return;
+        restoreSelection();
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) return;
+
+        let finalUrl = url;
+        if (!/^[a-z][a-z0-9+.-]*:/i.test(finalUrl)) {
+            finalUrl = `https://${finalUrl}`;
+        }
+
+        const enclosingLink = getEnclosingLink(selection);
+        const selectedText = selection.toString();
+
+        if (enclosingLink && (selection.isCollapsed || selectedText.trim() === (enclosingLink.textContent || '').trim())) {
+            // Case: selection is (or sits inside) an existing link — update it in place.
+            enclosingLink.setAttribute('href', finalUrl);
+            if (linkTarget) enclosingLink.setAttribute('target', linkTarget); else enclosingLink.removeAttribute('target');
+            ensureInnerSpan(enclosingLink);
+        } else if (!selection.isCollapsed) {
+            // Case: fresh selection — wrap it in a new <a><span>...</span></a>, un-linking
+            // first in case the selection straddles part of an existing link.
+            document.execCommand('unlink', false, undefined);
+            const freshRange = selection.getRangeAt(0);
+            const fragment = freshRange.extractContents();
+            const link = document.createElement('a');
+            link.setAttribute('href', finalUrl);
+            if (linkTarget) link.setAttribute('target', linkTarget);
+            const span = document.createElement('span');
+            span.appendChild(fragment);
+            link.appendChild(span);
+            freshRange.insertNode(link);
+            const newRange = document.createRange();
+            newRange.selectNodeContents(link);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+        } else {
+            return;
+        }
+
+        savedRange.current = null;
+        cleanupAndNormalize();
+        syncContentFromEditor();
+        refreshToolbarState();
+    };
+
+    const handleUnlink = () => {
+        if (isSourceMode || !editorRef.current) return;
+        restoreSelection();
+        const selection = window.getSelection();
+        if (!selection || !selection.anchorNode) return;
+        const link = getEnclosingLink(selection);
+        if (!link) return;
+
+        // Our structure is <a><span>...</span></a> — drop both tags, keep only the text.
+        const innerSpan = link.querySelector(':scope > span');
+        const contentToPreserve = innerSpan ? innerSpan.innerHTML : link.innerHTML;
+        const fragment = document.createRange().createContextualFragment(contentToPreserve);
+        link.parentNode?.replaceChild(fragment, link);
+
+        selection.removeAllRanges();
+        savedRange.current = null;
+        cleanupAndNormalize();
+        syncContentFromEditor();
+        refreshToolbarState();
+    };
+
+    const handleClearStyle = () => {
+        if (isSourceMode || !editorRef.current) return;
+        restoreSelection();
+        const selection = window.getSelection();
+        if (!selection || !selection.anchorNode) return;
+        const span = getEnclosingStyledSpan(selection, editorRef.current);
+        if (!span) return;
+
+        const fragment = document.createRange().createContextualFragment(span.innerHTML);
+        span.parentNode?.replaceChild(fragment, span);
+
+        selection.removeAllRanges();
+        savedRange.current = null;
+        cleanupAndNormalize();
+        syncContentFromEditor();
+        refreshToolbarState();
     };
 
     if (!isOpen || !editData) return null;
-    
+
     const inputClass = "w-full px-2.5 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none";
     const labelClass = "block text-[11px] font-medium text-gray-500 mb-1";
     const sectionLabelClass = "text-[11px] font-bold uppercase tracking-wider text-gray-500";
     const toggleBtnClass = (active: boolean) => `w-full py-1.5 rounded-md border text-sm transition-colors ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-600 text-gray-300 hover:bg-gray-700'}`;
-    const toolbarButtonClass = "p-2 rounded-md hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+    const ribbonBtnClass = (active: boolean) => `p-1.5 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'bg-violet-600 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white'}`;
 
     return (
         <>
-            {/* The LinkEditModal is now controlled and rendered by this component */}
-            <LinkEditModal
-                isOpen={isLinkModalOpen}
-                onClose={() => setIsLinkModalOpen(false)}
-                onSave={handleLinkModalSave}
-                textData={{ id: editData.id, content: formData.content }}
-            />
+            <style>{`
+                .tase-editor a { background-color: rgba(250, 204, 21, 0.25); border-radius: 2px; }
+                .tase-editor a:hover { background-color: rgba(250, 204, 21, 0.4); }
+            `}</style>
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] overflow-y-auto p-4" onClick={onClose}>
                 <div className="flex min-h-full items-start sm:items-center justify-center">
                     <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 w-full max-w-4xl max-h-[90vh] flex flex-col p-6" onClick={(e) => e.stopPropagation()}>
@@ -382,7 +619,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                             <h2 className="text-xl sm:text-2xl font-semibold text-gray-200">Edit Text & Style</h2>
                             <button onClick={onClose} className="text-gray-500 hover:text-white"><CloseIcon className="w-6 h-6" /></button>
                         </div>
-                        
+
                         <div className="flex-grow overflow-y-auto pr-2 space-y-6">
                             {/* Style Controls */}
                             <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
@@ -553,35 +790,84 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Content Editor */}
                             <div>
-                                <div className="bg-gray-900 border-t border-l border-r border-gray-600 rounded-t-md p-2 flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-2 text-gray-300">
-                                    {/* Left Toolbar */}
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={() => handleStyleCommand('bold')} className={toolbarButtonClass} disabled={isSourceMode} title="Bold"><BoldIcon className="w-5 h-5 fill-current" /></button>
-                                        <button onClick={() => handleStyleCommand('italic')} className={toolbarButtonClass} disabled={isSourceMode} title="Italic"><ItalicIcon className="w-5 h-5 fill-current" /></button>
-                                        <button onClick={() => handleStyleCommand('underline')} className={toolbarButtonClass} disabled={isSourceMode} title="Underline"><UnderlineIcon className="w-5 h-5 fill-current" /></button>
-                                        <div className="w-px h-5 bg-gray-600 mx-1"></div>
-                                        <button onClick={() => {
-                                                if (!isSourceMode && editorRef.current) {
-                                                    setFormData(d => ({ ...d, content: editorRef.current?.innerHTML || '' }));
-                                                }
-                                                setIsSourceMode(!isSourceMode);
-                                            }} className={(isSourceMode ? 'bg-violet-600 text-white' : '') + " " + toolbarButtonClass.replace(' disabled:cursor-not-allowed','')} title="View Source"><CodeIcon className="w-5 h-5" /></button>
+                                <div className={`bg-gray-900 border-t border-l border-r border-gray-600 rounded-t-md text-gray-300 ${isSourceMode ? 'opacity-70' : ''}`}>
+                                    {/* Ribbon row 1: run-level text formatting */}
+                                    <div className="flex flex-wrap items-center gap-1 px-2 py-1.5 border-b border-gray-700/70">
+                                        <div className="flex items-center gap-0.5">
+                                            <button type="button" onClick={toggleBold} disabled={isSourceMode} className={ribbonBtnClass(activeFormats.bold)} title="Bold selected text">
+                                                <BoldIcon className="w-4 h-4 fill-current" />
+                                            </button>
+                                            <button type="button" onClick={toggleItalic} disabled={isSourceMode} className={ribbonBtnClass(activeFormats.italic)} title="Italicize selected text">
+                                                <ItalicIcon className="w-4 h-4 fill-current" />
+                                            </button>
+                                            <button type="button" onClick={toggleUnderline} disabled={isSourceMode} className={ribbonBtnClass(activeFormats.underline)} title="Underline selected text">
+                                                <UnderlineIcon className="w-4 h-4 fill-current" />
+                                            </button>
+                                        </div>
+
+                                        <div className="w-px h-5 bg-gray-700 mx-1.5" />
+
+                                        <div className="flex items-center gap-1.5" title="Text color for selected text">
+                                            <TextColorIcon className="w-4 h-4 text-gray-400 flex-shrink-0" barColor={activeFormats.color} />
+                                            <div className="w-32">
+                                                <ColorPickerInput value={activeFormats.color} onChange={handleColorChange} />
+                                            </div>
+                                        </div>
+
+                                        <div className="w-px h-5 bg-gray-700 mx-1.5" />
+
+                                        <button type="button" onClick={handleClearStyle} disabled={isSourceMode || !canClearStyle} className={ribbonBtnClass(false)} title="Clear style on selected text">
+                                            <EraserIcon className="w-4 h-4" />
+                                        </button>
+
+                                        <div className="flex-1" />
+
+                                        <button type="button" onClick={() => setIsSourceMode(!isSourceMode)} className={ribbonBtnClass(isSourceMode)} title="View Source">
+                                            <CodeIcon className="w-4 h-4" />
+                                        </button>
                                     </div>
-                                    
-                                    {/* Right Toolbar */}
-                                    <div className="flex items-center gap-3">
-                                        <p className="text-xs text-gray-400 hidden sm:block">To add or edit links, use the button &rarr;</p>
-                                        <button 
-                                            onClick={() => setIsLinkModalOpen(true)} 
-                                            className="flex items-center gap-2 px-4 py-1.5 text-sm font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" 
-                                            disabled={isSourceMode} 
-                                            title="Edit Link"
+
+                                    {/* Ribbon row 2: link controls (replaces the old separate Edit Link modal) */}
+                                    <div className={`flex flex-wrap items-center gap-2 px-2 py-1.5 ${isSourceMode ? 'pointer-events-none opacity-50' : ''}`}>
+                                        <LinkIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                                        <input
+                                            type="text"
+                                            value={linkUrl}
+                                            onChange={e => setLinkUrl(e.target.value)}
+                                            onFocus={saveSelection}
+                                            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleApplyLink(); } }}
+                                            placeholder="Select text, then type or paste a URL…"
+                                            className="flex-1 min-w-[10rem] px-2.5 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                        />
+                                        <select
+                                            value={linkTarget}
+                                            onChange={e => setLinkTarget(e.target.value)}
+                                            onFocus={saveSelection}
+                                            className="px-2 py-1 text-sm text-white bg-gray-950/60 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
                                         >
-                                            <LinkIcon className="w-4 h-4" />
-                                            <span className="hidden sm:inline">Edit Link</span>
+                                            <option value="_blank">New Tab</option>
+                                            <option value="_self">Same Tab</option>
+                                        </select>
+                                        <button
+                                            type="button"
+                                            onClick={handleApplyLink}
+                                            disabled={!linkUrl.trim()}
+                                            className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-white bg-violet-600 rounded-md hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <LinkIcon className="w-3.5 h-3.5" />
+                                            {isLinkActive ? 'Update' : 'Apply'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleUnlink}
+                                            disabled={!isLinkActive}
+                                            className="flex items-center gap-1.5 px-3 py-1 text-sm font-semibold text-gray-300 bg-gray-700 rounded-md hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                        >
+                                            <UnlinkIcon className="w-3.5 h-3.5" />
+                                            Unlink
                                         </button>
                                     </div>
                                 </div>
@@ -596,8 +882,11 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                         ref={editorRef}
                                         contentEditable={true}
                                         onInput={e => setFormData(d => ({ ...d, content: (e.target as HTMLDivElement).innerHTML }))}
-                                        onBlur={cleanupAndNormalize}
-                                        className="w-full h-48 p-3 text-black bg-white rounded-b-md focus:ring-2 focus:ring-pink-500 focus:outline-none overflow-y-auto"
+                                        onBlur={() => { cleanupAndNormalize(); saveSelection(); }}
+                                        onMouseUp={refreshToolbarState}
+                                        onKeyUp={refreshToolbarState}
+                                        onFocus={refreshToolbarState}
+                                        className="tase-editor w-full h-48 p-3 text-black bg-white rounded-b-md focus:ring-2 focus:ring-pink-500 focus:outline-none overflow-y-auto"
                                     />
                                 )}
                             </div>
