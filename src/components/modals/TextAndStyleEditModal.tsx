@@ -184,6 +184,18 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         onClose();
     };
     
+    // Live preview needs a background that contrasts with the chosen text color —
+    // a fixed white swatch makes white/light text invisible in the preview.
+    const previewBg = useMemo(() => {
+        const clean = formData.styles.color.replace('#', '');
+        if (!/^[0-9a-fA-F]{6}$/.test(clean)) return '#ffffff';
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness > 150 ? '#1f2937' : '#ffffff';
+    }, [formData.styles.color]);
+
     const previewStyle = useMemo(() => ({
         fontFamily: formData.styles.fontFamily,
         fontSize: `${formData.styles.fontSize}px`,
@@ -295,7 +307,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                             {/* Style Controls */}
                             <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
                                 <h3 className="text-sm font-semibold text-gray-300 mb-2 text-center">Live Style Preview</h3>
-                                <div className="bg-white rounded min-h-[60px] flex items-center p-2">
+                                <div className="rounded min-h-[60px] flex items-center p-2" style={{ backgroundColor: previewBg }}>
                                     <div style={previewStyle} dangerouslySetInnerHTML={{ __html: formData.content }} />
                                 </div>
                             </div>
