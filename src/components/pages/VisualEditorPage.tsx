@@ -482,7 +482,8 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                     });
                     cleanDoc.querySelectorAll('td[style*="position: relative"], th[style*="position: relative"]').forEach(cell => {
                         cell.style.removeProperty('position');
-                        if (cell.getAttribute('style') && cell.getAttribute('style').trim() === '') {
+                        const remainingStyle = cell.getAttribute('style');
+                        if (remainingStyle !== null && remainingStyle.trim() === '') {
                             cell.removeAttribute('style');
                         }
                     });

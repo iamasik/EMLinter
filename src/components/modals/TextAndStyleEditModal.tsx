@@ -61,9 +61,54 @@ const defaultFormData = {
         fontWeight: 'normal',
         fontStyle: 'normal',
         textTransform: 'none',
-        padding: { top: 0, right: 0, bottom: 0, left: 0 }
+        padding: { top: 0, right: 0, bottom: 0, left: 0 },
+        border: {
+            top: { width: 0, style: 'none', color: '#000000' },
+            right: { width: 0, style: 'none', color: '#000000' },
+            bottom: { width: 0, style: 'none', color: '#000000' },
+            left: { width: 0, style: 'none', color: '#000000' },
+        },
     },
     content: ''
+};
+
+const BORDER_STYLE_KEYWORDS = ['none', 'hidden', 'dotted', 'dashed', 'solid', 'double', 'groove', 'ridge', 'inset', 'outset'];
+
+// Parses a border shorthand value ("1px solid #EE0000") into its width/style/color parts.
+// Falls back to a disabled border when the value is missing or unparsable.
+const parseBorderSide = (value: string | undefined): { width: number; style: string; color: string } => {
+    const empty = { width: 0, style: 'none', color: '#000000' };
+    if (!value) return empty;
+    const trimmed = value.trim();
+    if (!trimmed) return empty;
+
+    const colorMatch = trimmed.match(/#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)|hsla?\([^)]*\)/i);
+    let remainder = trimmed;
+    let color = '#000000';
+    if (colorMatch) {
+        color = toHexColor(colorMatch[0]);
+        remainder = trimmed.replace(colorMatch[0], ' ');
+    }
+
+    let style = 'none';
+    const styleMatch = remainder.toLowerCase().match(new RegExp(`\\b(${BORDER_STYLE_KEYWORDS.join('|')})\\b`));
+    if (styleMatch) {
+        style = styleMatch[1];
+        remainder = remainder.replace(new RegExp(styleMatch[1], 'i'), ' ');
+    }
+
+    if (!colorMatch) {
+        const namedColor = remainder.trim().split(/\s+/).filter(tok => tok && !/^-?\d/.test(tok))[0];
+        if (namedColor) color = toHexColor(namedColor);
+    }
+
+    const widthMatch = remainder.match(/(-?\d+(?:\.\d+)?)/);
+    const width = widthMatch ? parseFloat(widthMatch[1]) : (style !== 'none' ? 1 : 0);
+
+    if (style === 'none' || style === 'hidden' || width <= 0) {
+        return { width: 0, style: 'none', color };
+    }
+    return { width, style, color };
 };
 
 interface TextAndStyleEditModalProps {
@@ -82,6 +127,13 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
     const [isSourceMode, setIsSourceMode] = useState(false);
     const editorRef = useRef<HTMLDivElement>(null);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const [activeBorderSide, setActiveBorderSide] = useState<'top' | 'right' | 'bottom' | 'left'>('top');
+
+    const activeBorder = formData.styles.border[activeBorderSide];
+    const updateActiveBorder = (patch: Partial<typeof activeBorder>) => setFormData(d => ({
+        ...d,
+        styles: { ...d.styles, border: { ...d.styles.border, [activeBorderSide]: { ...d.styles.border[activeBorderSide], ...patch } } }
+    }));
 
     useEffect(() => {
         if (isOpen && editData) {
@@ -111,6 +163,13 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             const fontFamilyValue = styleObj['font-family'] || defaultFormData.styles.fontFamily;
             const matchedFont = emailSafeFonts.find(font => font.value.toLowerCase() === fontFamilyValue.toLowerCase());
 
+            const newBorder = {
+                top: parseBorderSide(styleObj['border-top'] || styleObj['border']),
+                right: parseBorderSide(styleObj['border-right'] || styleObj['border']),
+                bottom: parseBorderSide(styleObj['border-bottom'] || styleObj['border']),
+                left: parseBorderSide(styleObj['border-left'] || styleObj['border']),
+            };
+
             setFormData({
                 styles: {
                     fontFamily: matchedFont ? matchedFont.value : fontFamilyValue,
@@ -123,9 +182,11 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                     fontStyle: styleObj['font-style'] || defaultFormData.styles.fontStyle,
                     textTransform: styleObj['text-transform'] || defaultFormData.styles.textTransform,
                     padding: newPadding,
+                    border: newBorder,
                 },
                 content: editData.content
             });
+            setActiveBorderSide('top');
 
             if (editorRef.current && !isSourceMode) {
                 editorRef.current.innerHTML = editData.content;
@@ -180,6 +241,13 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             }
         }
 
+        (['top', 'right', 'bottom', 'left'] as const).forEach(side => {
+            const b = formData.styles.border[side];
+            if (b.style !== 'none' && b.width > 0) {
+                newStyleMap.set(`border-${side}`, `${b.width}px ${b.style} ${toHexColor(b.color)}`);
+            }
+        });
+
         const declarations = Array.from(newStyleMap.entries())
             .map(([prop, val]) => `${prop}: ${val}`);
         
@@ -215,6 +283,10 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         paddingRight: `${formData.styles.padding.right}px`,
         paddingBottom: `${formData.styles.padding.bottom}px`,
         paddingLeft: `${formData.styles.padding.left}px`,
+        borderTop: formData.styles.border.top.style !== 'none' ? `${formData.styles.border.top.width}px ${formData.styles.border.top.style} ${formData.styles.border.top.color}` : 'none',
+        borderRight: formData.styles.border.right.style !== 'none' ? `${formData.styles.border.right.width}px ${formData.styles.border.right.style} ${formData.styles.border.right.color}` : 'none',
+        borderBottom: formData.styles.border.bottom.style !== 'none' ? `${formData.styles.border.bottom.width}px ${formData.styles.border.bottom.style} ${formData.styles.border.bottom.color}` : 'none',
+        borderLeft: formData.styles.border.left.style !== 'none' ? `${formData.styles.border.left.width}px ${formData.styles.border.left.style} ${formData.styles.border.left.color}` : 'none',
     }), [formData.styles]);
     
     const cleanupAndNormalize = () => {
@@ -391,6 +463,54 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                                 <input type="number" value={formData.styles.padding[side]} onChange={e => setFormData(d => ({...d, styles: {...d.styles, padding: {...d.styles.padding, [side]: parseFloat(e.target.value) || 0 }}}))} className={inputClass} />
                                             </div>
                                         ))}
+                                    </div>
+                                    <h3 className="font-semibold text-gray-200 pt-2">Border</h3>
+                                    <div className="grid grid-cols-4 gap-1.5">
+                                        {(['top', 'right', 'bottom', 'left'] as const).map(side => {
+                                            const active = activeBorderSide === side;
+                                            const hasBorder = formData.styles.border[side].style !== 'none';
+                                            return (
+                                                <button
+                                                    key={side}
+                                                    type="button"
+                                                    onClick={() => setActiveBorderSide(side)}
+                                                    className={`relative px-2 py-1.5 text-xs font-medium rounded-md border transition-colors ${active ? 'bg-violet-600 border-violet-500 text-white' : 'bg-gray-900 border-gray-600 text-gray-300 hover:bg-gray-700'}`}
+                                                >
+                                                    {side.charAt(0).toUpperCase() + side.slice(1)}
+                                                    {hasBorder && (
+                                                        <span
+                                                            className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full ring-1 ring-black/30"
+                                                            style={{ backgroundColor: formData.styles.border[side].color }}
+                                                        />
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    <div className="grid grid-cols-[3.5rem_1fr_7.5rem] gap-2 items-center">
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            title="Width (px)"
+                                            value={activeBorder.width}
+                                            onChange={e => updateActiveBorder({ width: parseFloat(e.target.value) || 0 })}
+                                            className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                        />
+                                        <select
+                                            value={activeBorder.style}
+                                            onChange={e => {
+                                                const newStyle = e.target.value;
+                                                updateActiveBorder({ style: newStyle, width: newStyle !== 'none' && activeBorder.width === 0 ? 1 : activeBorder.width });
+                                            }}
+                                            className="w-full px-2 py-1.5 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                                        >
+                                            <option value="none">None</option>
+                                            <option value="solid">Solid</option>
+                                            <option value="dashed">Dashed</option>
+                                            <option value="dotted">Dotted</option>
+                                            <option value="double">Double</option>
+                                        </select>
+                                        <ColorPickerInput value={activeBorder.color} onChange={hex => updateActiveBorder({ color: hex })} />
                                     </div>
                                 </div>
                             </div>
