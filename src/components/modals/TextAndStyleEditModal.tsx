@@ -55,6 +55,7 @@ const defaultFormData = {
         fontFamily: 'sans-serif',
         fontSize: 16,
         lineHeight: 24,
+        letterSpacing: 0,
         color: '#000000',
         textAlign: 'left',
         fontWeight: 'normal',
@@ -115,6 +116,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                     fontFamily: matchedFont ? matchedFont.value : fontFamilyValue,
                     fontSize: parseFloat(styleObj['font-size']) || defaultFormData.styles.fontSize,
                     lineHeight: parseFloat(styleObj['line-height']) || defaultFormData.styles.lineHeight,
+                    letterSpacing: parseFloat(styleObj['letter-spacing']) || defaultFormData.styles.letterSpacing,
                     color: toHexColor(styleObj['color'] || defaultFormData.styles.color),
                     textAlign: styleObj['text-align'] || defaultFormData.styles.textAlign,
                     fontWeight: styleObj['font-weight'] || defaultFormData.styles.fontWeight,
@@ -160,6 +162,9 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         newStyleMap.set('font-family', finalFontFamily);
         newStyleMap.set('font-size', `${formData.styles.fontSize}px`);
         newStyleMap.set('line-height', `${formData.styles.lineHeight}px`);
+        if (formData.styles.letterSpacing) {
+            newStyleMap.set('letter-spacing', `${formData.styles.letterSpacing}px`);
+        }
         newStyleMap.set('color', toHexColor(formData.styles.color));
         newStyleMap.set('text-align', formData.styles.textAlign);
         newStyleMap.set('font-weight', formData.styles.fontWeight);
@@ -200,6 +205,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         fontFamily: formData.styles.fontFamily,
         fontSize: `${formData.styles.fontSize}px`,
         lineHeight: `${formData.styles.lineHeight}px`,
+        letterSpacing: `${formData.styles.letterSpacing}px`,
         color: formData.styles.color,
         textAlign: formData.styles.textAlign as any,
         fontWeight: formData.styles.fontWeight as any,
@@ -344,14 +350,20 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                                             </select>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className={labelClass}>Text Transform</label>
-                                        <select value={formData.styles.textTransform} onChange={e => setFormData(d => ({...d, styles: {...d.styles, textTransform: e.target.value}}))} className={inputClass}>
-                                            <option value="none">None</option>
-                                            <option value="uppercase">Uppercase</option>
-                                            <option value="capitalize">Capitalize</option>
-                                            <option value="lowercase">Lowercase</option>
-                                        </select>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className={labelClass}>Text Transform</label>
+                                            <select value={formData.styles.textTransform} onChange={e => setFormData(d => ({...d, styles: {...d.styles, textTransform: e.target.value}}))} className={inputClass}>
+                                                <option value="none">None</option>
+                                                <option value="uppercase">Uppercase</option>
+                                                <option value="capitalize">Capitalize</option>
+                                                <option value="lowercase">Lowercase</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Letter Spacing (px)</label>
+                                            <input type="number" step="0.1" value={formData.styles.letterSpacing} onChange={e => setFormData(d => ({...d, styles: {...d.styles, letterSpacing: parseFloat(e.target.value) || 0}}))} className={inputClass} />
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="bg-gray-700/40 p-4 rounded-lg space-y-4">
