@@ -622,6 +622,16 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                     }
                 });
 
+                // An attribute value wins (it's the number email clients without CSS support use);
+                // otherwise fall back to the inline style so a style-only "auto"/"100%"/px value still shows.
+                function vibeDisplayDimension(attrVal, styleVal) {
+                    if (styleVal === 'auto') return 'auto';
+                    if (attrVal) return attrVal;
+                    if (styleVal && /px$/.test(styleVal)) return styleVal.replace('px', '');
+                    if (styleVal === '100%') return '100%';
+                    return 'auto';
+                }
+
                 function initImage(img, id) {
                     img.dataset.vibeImgId = id;
                     const parentLink = img.closest('a');
@@ -632,10 +642,18 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                     img.addEventListener('click', (e) => {
                         e.preventDefault(); e.stopPropagation();
                         const currentParentLink = img.closest('a');
+                        const parentTd = img.closest('td');
                         window.parent.postMessage({ type: 'vibe-image-click', imageData: {
                             id: img.dataset.vibeImgId,
-                            src: img.getAttribute('src'), alt: img.getAttribute('alt'),
-                            width: img.getAttribute('width'), height: img.getAttribute('height'),
+                            src: (img.getAttribute('src') || '').trim(), alt: img.getAttribute('alt'),
+                            width: vibeDisplayDimension(img.getAttribute('width'), img.style.getPropertyValue('width')),
+                            height: vibeDisplayDimension(img.getAttribute('height'), img.style.getPropertyValue('height')),
+                            borderRadius: img.style.getPropertyValue('border-radius') || '',
+                            border: img.style.getPropertyValue('border') || '',
+                            paddingTop: parentTd ? (parentTd.style.getPropertyValue('padding-top') || '') : '',
+                            paddingRight: parentTd ? (parentTd.style.getPropertyValue('padding-right') || '') : '',
+                            paddingBottom: parentTd ? (parentTd.style.getPropertyValue('padding-bottom') || '') : '',
+                            paddingLeft: parentTd ? (parentTd.style.getPropertyValue('padding-left') || '') : '',
                             linkId: currentParentLink ? currentParentLink.dataset.vibeLinkId : null,
                             href: currentParentLink ? currentParentLink.getAttribute('href') : null,
                             target: currentParentLink ? currentParentLink.getAttribute('target') : null,
@@ -706,28 +724,90 @@ const VisualEditorPage: React.FC<VisualEditorPageProps> = ({ slug }) => {
                 window.addEventListener('message', (event) => {
                     const data = event.data;
                     if (data.type === 'vibe-image-update') {
-                        const { id, src, alt, width, height, linkId, href, content, style, hasLink, target } = data;
+                        const {
+                            id, src, alt, width, height, linkId, href, hasLink, target,
+                            borderRadius, border, paddingTop, paddingRight, paddingBottom, paddingLeft,
+                        } = data;
                         const imgToUpdate = document.querySelector('[data-vibe-img-id="' + id + '"]');
                         if (imgToUpdate) {
-                            if (src !== undefined) imgToUpdate.setAttribute('src', src);
+                            if (src !== undefined) imgToUpdate.setAttribute('src', String(src).trim());
                             if (alt !== undefined) imgToUpdate.setAttribute('alt', alt);
-                            if (width !== undefined && imgToUpdate.hasAttribute('width')) imgToUpdate.setAttribute('width', width);
-                            if (height !== undefined && imgToUpdate.hasAttribute('height')) imgToUpdate.setAttribute('height', height);
-                            let imgStyle = imgToUpdate.getAttribute('style') || '';
-                            if (width !== undefined && /max-width:/.test(imgStyle)) imgStyle = imgStyle.replace(/max-width:\\s*[^;]+/, 'max-width: ' + width + 'px');
-                            if (height !== undefined && /height:/.test(imgStyle)) imgStyle = imgStyle.replace(/height:\\s*[^;]+/, 'height: ' + height + 'px');
-                            imgToUpdate.setAttribute('style', imgStyle);
-                            
+
+                            // Plain numbers become px; "auto"/percentages/other units pass through untouched.
+                            function vibeToCssLength(val) {
+                                if (val === undefined || val === null || val === '') return '';
+                                if (val === 'auto') return 'auto';
+                                if (/^\\d+(\\.\\d+)?$/.test(String(val).trim())) return val + 'px';
+                                return val;
+                            }
+
+                            // Sets the HTML attribute (the number non-CSS clients use) and mirrors it into any
+                            // matching inline style properties that already exist -- but a style value of exactly
+                            // "100%" (fluid width) is left alone rather than overwritten with a fixed pixel value.
+                            function vibeApplyDimension(attr, styleProp, maxStyleProp, rawVal) {
+                                if (rawVal === undefined) return;
+                                if (rawVal === 'auto' || rawVal === '') {
+                                    imgToUpdate.removeAttribute(attr);
+                                    if (imgToUpdate.style.getPropertyValue(styleProp)) imgToUpdate.style.setProperty(styleProp, 'auto');
+                                    return;
+                                }
+                                const numericAttr = String(rawVal).trim().replace(/px$/, '');
+                                const px = vibeToCssLength(rawVal);
+                                imgToUpdate.setAttribute(attr, numericAttr);
+                                if (imgToUpdate.style.getPropertyValue(styleProp) && imgToUpdate.style.getPropertyValue(styleProp) !== '100%') {
+                                    imgToUpdate.style.setProperty(styleProp, px);
+                                }
+                                if (maxStyleProp && imgToUpdate.style.getPropertyValue(maxStyleProp) && imgToUpdate.style.getPropertyValue(maxStyleProp) !== '100%') {
+                                    imgToUpdate.style.setProperty(maxStyleProp, px);
+                                }
+                            }
+
+                            vibeApplyDimension('width', 'width', 'max-width', width);
+                            vibeApplyDimension('height', 'height', null, height);
+
+                            if (borderRadius !== undefined) {
+                                if (borderRadius) imgToUpdate.style.setProperty('border-radius', borderRadius);
+                                else imgToUpdate.style.removeProperty('border-radius');
+                            }
+                            if (border !== undefined) {
+                                if (border) imgToUpdate.style.setProperty('border', border);
+                                else imgToUpdate.style.removeProperty('border');
+                            }
+
+                            const parentTd = imgToUpdate.closest('td');
+                            if (parentTd) {
+                                const widthGiven = width !== undefined && width !== 'auto' && width !== '';
+                                if (widthGiven) {
+                                    const tdPx = vibeToCssLength(width);
+                                    if (parentTd.style.getPropertyValue('width') && parentTd.style.getPropertyValue('width') !== '100%') {
+                                        parentTd.style.setProperty('width', tdPx);
+                                    }
+                                    if (parentTd.style.getPropertyValue('max-width') && parentTd.style.getPropertyValue('max-width') !== '100%') {
+                                        parentTd.style.setProperty('max-width', tdPx);
+                                    }
+                                }
+                                [['padding-top', paddingTop], ['padding-right', paddingRight], ['padding-bottom', paddingBottom], ['padding-left', paddingLeft]].forEach(([prop, val]) => {
+                                    if (val === undefined) return;
+                                    const cssVal = vibeToCssLength(val);
+                                    if (cssVal) parentTd.style.setProperty(prop, cssVal);
+                                    else parentTd.style.removeProperty(prop);
+                                });
+                            }
+
                             const currentParentLink = imgToUpdate.closest('a');
                             if (hasLink) {
-                                const linkUrl = href || '#';
+                                const linkUrl = (href || '#').trim();
                                 if (currentParentLink) {
-                                    currentParentLink.href = linkUrl;
-                                    if (target) { currentParentLink.target = target; } else { currentParentLink.removeAttribute('target'); }
+                                    currentParentLink.setAttribute('href', linkUrl);
+                                    if (target) { currentParentLink.setAttribute('target', target); } else { currentParentLink.removeAttribute('target'); }
+                                    if (target === '_blank') { currentParentLink.setAttribute('rel', 'noopener noreferrer'); } else { currentParentLink.removeAttribute('rel'); }
                                 } else {
                                     const newLink = document.createElement('a');
-                                    newLink.href = linkUrl;
-                                    if (target) newLink.target = target;
+                                    newLink.setAttribute('href', linkUrl);
+                                    if (target) {
+                                        newLink.setAttribute('target', target);
+                                        if (target === '_blank') newLink.setAttribute('rel', 'noopener noreferrer');
+                                    }
                                     newLink.dataset.vibeLinkId = linkId || ('vibe-link-' + id);
                                     if (imgToUpdate.parentNode) {
                                        imgToUpdate.parentNode.insertBefore(newLink, imgToUpdate);

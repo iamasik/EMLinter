@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UploadIcon, PlayCircleIcon } from '../Icons';
+import { UploadIcon, PlayCircleIcon, ScaleIcon, LinkIcon, InfoIcon } from '../Icons';
 import VideoThumbnailModal from './VideoThumbnailModal';
 
 interface ImageEditModalProps {
@@ -15,163 +15,242 @@ interface ImageEditModalProps {
     linkId?: string;
     href?: string | null;
     target?: string | null;
+    borderRadius?: string;
+    border?: string;
+    paddingTop?: string;
+    paddingRight?: string;
+    paddingBottom?: string;
+    paddingLeft?: string;
   } | null;
 }
 
+const CornerRadiusIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16V9a5 5 0 015-5h7" />
+  </svg>
+);
+
+const BorderBoxIcon = ({ className }: { className?: string }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <rect x="4" y="4" width="16" height="16" rx="1.5" />
+  </svg>
+);
+
+// A single bordered box combining a small badge (letter or icon) with the input, so a field
+// is self-labeling without needing its own <label> line — the compact building block for the
+// dimension/style/padding grids below.
+const CompactField: React.FC<{
+  badge: React.ReactNode;
+  title: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  suffix?: React.ReactNode;
+}> = ({ badge, title, name, value, onChange, placeholder, suffix }) => (
+  <div
+    title={title}
+    className="flex items-center gap-1 bg-gray-900 border border-gray-600 rounded-md pl-2 pr-1 focus-within:ring-2 focus-within:ring-pink-500"
+  >
+    <span className="flex items-center justify-center w-3.5 shrink-0 text-[10px] font-bold text-gray-500">{badge}</span>
+    <input
+      type="text"
+      id={`img-${name}`}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      aria-label={title}
+      className="w-full min-w-0 bg-transparent py-1.5 text-sm text-white focus:outline-none"
+    />
+    {suffix}
+  </div>
+);
+
+// Strips a trailing "px" for display in plain-number fields; leaves other units (%, em, "auto") untouched.
+const stripPx = (value?: string | null) => {
+  if (!value) return '';
+  const match = String(value).trim().match(/^(\d+(?:\.\d+)?)px$/);
+  return match ? match[1] : value;
+};
+
+const initialFormData = {
+  src: '', alt: '', width: '', height: '', href: '', hasLink: false, target: '_blank',
+  borderRadius: '', border: '',
+  paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '',
+};
+
 const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave, imageData }) => {
-  const [formData, setFormData] = useState({ src: '', alt: '', width: '', height: '', href: '', hasLink: false, target: '_blank' });
+  const [formData, setFormData] = useState(initialFormData);
   const [isVideoThumbnailModalOpen, setIsVideoThumbnailModalOpen] = useState(false);
-  
+
   useEffect(() => {
     if (imageData) {
       const linkExists = imageData.href != null;
       setFormData({
         src: imageData.src || '',
         alt: imageData.alt || '',
-        width: imageData.width || '',
-        height: imageData.height || '',
+        width: imageData.width || 'auto',
+        height: imageData.height || 'auto',
         href: imageData.href || '',
         hasLink: linkExists,
         target: imageData.target || '_blank',
+        borderRadius: imageData.borderRadius || '',
+        border: imageData.border || '',
+        paddingTop: stripPx(imageData.paddingTop),
+        paddingRight: stripPx(imageData.paddingRight),
+        paddingBottom: stripPx(imageData.paddingBottom),
+        paddingLeft: stripPx(imageData.paddingLeft),
       });
     }
   }, [imageData]);
 
-  // Automatically calculate height based on src and width
-  useEffect(() => {
-    const numericWidth = Number(formData.width);
-    if (formData.src && numericWidth > 0) {
-      const img = new Image();
-      img.onload = () => {
-        if (img.naturalWidth > 0) {
-          const aspectRatio = img.naturalHeight / img.naturalWidth;
-          const newHeight = Math.round(numericWidth * aspectRatio);
-          if (!isNaN(newHeight)) {
-            setFormData(prev => ({ ...prev, height: String(newHeight) }));
-          }
-        }
-      };
-      img.onerror = () => {
-        // Could not load image, do nothing.
-      };
-      img.src = formData.src;
-    }
-  }, [formData.src, formData.width]);
-
-
   if (!isOpen || !imageData) return null;
 
+  // Manually recompute height from the current width using the source image's natural aspect ratio.
+  // Deliberately not automatic: an automatic recalc on every keystroke would fight a user who typed
+  // "auto" or a deliberately-distorted height.
+  const handleCalculateHeight = () => {
+    const numericWidth = Number(formData.width);
+    if (!formData.src || !numericWidth || numericWidth <= 0) return;
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 0) {
+        const aspectRatio = img.naturalHeight / img.naturalWidth;
+        const newHeight = Math.round(numericWidth * aspectRatio);
+        if (!isNaN(newHeight)) {
+          setFormData(prev => ({ ...prev, height: String(newHeight) }));
+        }
+      }
+    };
+    img.src = formData.src;
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const isCheckbox = type === 'checkbox';
-    
-    setFormData(prev => ({ 
-        ...prev, 
-        [name]: isCheckbox ? (e.target as HTMLInputElement).checked : value 
-    }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
-    onSave({ id: imageData.id, linkId: imageData.linkId, ...formData });
+    onSave({ id: imageData.id, linkId: imageData.linkId, ...formData, src: formData.src.trim(), href: formData.href.trim() });
     onClose();
   };
-  
+
   return (
     <>
       <VideoThumbnailModal
           isOpen={isVideoThumbnailModalOpen}
           onClose={() => setIsVideoThumbnailModalOpen(false)}
       />
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 w-full max-w-lg p-6 relative" onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold text-gray-200">Edit Image</h2>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4" onClick={onClose}>
+        <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 w-full max-w-md sm:max-w-lg max-h-[92vh] overflow-y-auto p-4 sm:p-6 relative" onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-200">Edit Image</h2>
               <button
                   onClick={() => setIsVideoThumbnailModalOpen(true)}
-                  className="flex items-center gap-2 text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors duration-200"
+                  title="Make Video Thumbnail"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-pink-400 hover:text-pink-300 transition-colors duration-200"
               >
-                  <PlayCircleIcon className="w-5 h-5" />
-                  <span>Make Video Thumbnail</span>
+                  <PlayCircleIcon className="w-4 h-4" />
+                  <span className="hidden sm:inline">Video Thumbnail</span>
               </button>
           </div>
-          
-          <div className="bg-gray-700/50 border border-gray-600 rounded-lg p-3 text-xs text-gray-300 mb-6 space-y-1">
+
+          <div className="flex items-start gap-2 bg-gray-700/40 border border-gray-600 rounded-lg px-3 py-2 text-[11px] leading-snug text-gray-400 mb-4">
+              <InfoIcon className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-500" />
               <p>
-                  <strong className="text-gray-200">Note:</strong> Direct image uploading is currently disabled for privacy reasons.
-              </p>
-              <p>
-                  Please upload your image to a service like <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-pink-400 underline hover:text-pink-300">ImgBB</a> or <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="text-pink-400 underline hover:text-pink-300">Postimages</a> and paste the direct image URL below.
-              </p>
-              <p className="pt-2 border-t border-gray-600/50 mt-2">
-                <strong className="text-pink-400">New:</strong> Create a video-style thumbnail by adding a play button overlay to your current image.
+                  Uploads are disabled for privacy — host your image on <a href="https://imgbb.com/" target="_blank" rel="noopener noreferrer" className="text-pink-400 underline hover:text-pink-300">ImgBB</a> or <a href="https://postimages.org/" target="_blank" rel="noopener noreferrer" className="text-pink-400 underline hover:text-pink-300">Postimages</a> and paste the URL below.
               </p>
           </div>
-          
-          <div className="space-y-4">
+
+          <div className="space-y-3">
             <div>
               <div className="flex justify-between items-center mb-1">
                   <label htmlFor="img-src" className="block text-sm font-medium text-gray-400">Image Source (URL)</label>
                   <button
                       disabled={true}
                       title="Direct upload is disabled for privacy."
-                      className="flex items-center gap-2 text-xs font-semibold text-gray-500 cursor-not-allowed"
+                      className="text-gray-600 cursor-not-allowed"
                   >
                       <UploadIcon className="w-4 h-4" />
-                      Upload Disabled
                   </button>
               </div>
               <input type="text" id="img-src" name="src" value={formData.src} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
             </div>
-            <div>
-              <div className="flex items-center">
-                  <input
-                    id="img-hasLink"
-                    name="hasLink"
-                    type="checkbox"
-                    checked={formData.hasLink}
-                    onChange={handleChange}
-                    className="h-4 w-4 rounded border-gray-500 text-pink-600 focus:ring-pink-500 bg-gray-700"
-                  />
-                  <label htmlFor="img-hasLink" className="ml-2 block text-sm font-medium text-gray-300">
+
+            <div className="flex items-center justify-between">
+                <label htmlFor="img-hasLink" className="flex items-center gap-1.5 text-sm font-medium text-gray-300">
+                    <LinkIcon className="w-3.5 h-3.5 text-gray-500" />
                     Add link to image
-                  </label>
-              </div>
+                </label>
+                <button
+                    id="img-hasLink"
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.hasLink}
+                    onClick={() => setFormData(prev => ({ ...prev, hasLink: !prev.hasLink }))}
+                    className={`relative w-9 h-5 rounded-full shrink-0 transition-colors duration-200 ${formData.hasLink ? 'bg-pink-600' : 'bg-gray-600'}`}
+                >
+                    <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform duration-200 ${formData.hasLink ? 'translate-x-4' : ''}`} />
+                </button>
             </div>
             {formData.hasLink && (
-              <div className="space-y-4 border-l-2 border-pink-500/30 pl-4 ml-2">
-                  <div>
-                    <label htmlFor="img-href" className="block text-sm font-medium text-gray-400 mb-1">Image Link (URL)</label>
+              <div className="flex gap-3 border-l-2 border-pink-500/30 pl-3 ml-1">
+                  <div className="flex-1">
+                    <label htmlFor="img-href" className="block text-xs text-gray-500 mb-1">Link URL</label>
                     <input type="text" id="img-href" name="href" value={formData.href} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
                   </div>
-                  <div>
-                      <label htmlFor="img-target" className="block text-sm font-medium text-gray-400 mb-1">Open link in</label>
-                      <select id="img-target" name="target" value={formData.target} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none">
+                  <div className="w-28 shrink-0">
+                      <label htmlFor="img-target" className="block text-xs text-gray-500 mb-1">Opens in</label>
+                      <select id="img-target" name="target" value={formData.target} onChange={handleChange} className="w-full px-2 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none">
                           <option value="_blank">New Tab</option>
                           <option value="_self">Same Page</option>
                       </select>
                   </div>
               </div>
             )}
+
             <div>
               <label htmlFor="img-alt" className="block text-sm font-medium text-gray-400 mb-1">Alt Text</label>
               <input type="text" id="img-alt" name="alt" value={formData.alt} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
             </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label htmlFor="img-width" className="block text-sm font-medium text-gray-400 mb-1">Width (e.g., 600)</label>
-                <input type="text" id="img-width" name="width" value={formData.width} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
-              </div>
-              <div className="flex-1">
-                <label htmlFor="img-height" className="block text-sm font-medium text-gray-400 mb-1">Height (e.g., 200)</label>
-                <input type="text" id="img-height" name="height" value={formData.height} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <CompactField badge="W" title="Width (px or auto)" name="width" value={formData.width} onChange={handleChange} placeholder="auto" />
+              <CompactField
+                badge="H" title="Height (px or auto)" name="height" value={formData.height} onChange={handleChange} placeholder="auto"
+                suffix={
+                  <button
+                    type="button"
+                    onClick={handleCalculateHeight}
+                    disabled={!formData.src || !formData.width || formData.width === 'auto'}
+                    title="Calculate height from width using the image's aspect ratio"
+                    className="p-1 text-gray-500 hover:text-pink-400 disabled:opacity-30 disabled:hover:text-gray-500 transition-colors duration-200 shrink-0"
+                  >
+                    <ScaleIcon className="w-3.5 h-3.5" />
+                  </button>
+                }
+              />
+              <CompactField badge={<CornerRadiusIcon className="w-3.5 h-3.5" />} title="Border radius" name="borderRadius" value={formData.borderRadius} onChange={handleChange} placeholder="8px" />
+              <CompactField badge={<BorderBoxIcon className="w-3.5 h-3.5" />} title="Border" name="border" value={formData.border} onChange={handleChange} placeholder="1px solid #000" />
+            </div>
+
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Cell padding (px)</label>
+              <div className="grid grid-cols-4 gap-1.5">
+                <CompactField badge="T" title="Padding top" name="paddingTop" value={formData.paddingTop} onChange={handleChange} placeholder="0" />
+                <CompactField badge="R" title="Padding right" name="paddingRight" value={formData.paddingRight} onChange={handleChange} placeholder="0" />
+                <CompactField badge="B" title="Padding bottom" name="paddingBottom" value={formData.paddingBottom} onChange={handleChange} placeholder="0" />
+                <CompactField badge="L" title="Padding left" name="paddingLeft" value={formData.paddingLeft} onChange={handleChange} placeholder="0" />
               </div>
             </div>
           </div>
-          <div className="mt-6 flex justify-end space-x-4">
-            <button onClick={onClose} className="px-6 py-2 font-semibold text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+
+          <div className="mt-5 flex gap-3 sm:justify-end">
+            <button onClick={onClose} className="flex-1 sm:flex-none px-5 py-2 text-sm font-semibold text-gray-300 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
               Cancel
             </button>
-            <button onClick={handleSave} className="px-6 py-2 font-semibold text-white bg-gradient-to-r from-pink-600 to-violet-600 rounded-lg hover:from-pink-700 hover:to-violet-700 transition-transform duration-200">
+            <button onClick={handleSave} className="flex-1 sm:flex-none px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-pink-600 to-violet-600 rounded-lg hover:from-pink-700 hover:to-violet-700 transition-transform duration-200">
               Save Changes
             </button>
           </div>
