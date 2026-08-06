@@ -22,6 +22,13 @@ const emailSafeFonts = [
     { name: 'Lucida Console', value: "'Lucida Console', Monaco, monospace" },
 ];
 
+// Extracts the primary font name from a CSS font-family value ("'Arial Black',Arial,sans-serif"
+// -> "arial black"), stripping optional quotes and any fallback stack. Used to match a saved
+// font-family against emailSafeFonts regardless of fallback fonts or comma spacing, since a
+// quoted multi-word name is otherwise never byte-identical to the list's canonical entry.
+const getPrimaryFontName = (fontFamily: string): string =>
+    (fontFamily || '').split(',')[0].trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+
 // Normalizes any valid CSS color (rgb/rgba/hsl/named/short-hex) to a 6-digit hex string,
 // since the color picker input and the saved email style must always be hex.
 const toHexColor = (color: string): string => {
@@ -61,6 +68,7 @@ const defaultFormData = {
         fontStyle: 'normal',
         textTransform: 'none',
         padding: { top: 0, right: 0, bottom: 0, left: 0 },
+        borderRadius: 0,
         border: {
             top: { width: 0, style: 'none', color: '#000000' },
             right: { width: 0, style: 'none', color: '#000000' },
@@ -242,7 +250,12 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             }
 
             const fontFamilyValue = styleObj['font-family'] || defaultFormData.styles.fontFamily;
-            const matchedFont = emailSafeFonts.find(font => font.value.toLowerCase() === fontFamilyValue.toLowerCase());
+            const matchedFont = emailSafeFonts.find(font => getPrimaryFontName(font.value) === getPrimaryFontName(fontFamilyValue));
+
+            // Only a single uniform radius is editable here, so a shorthand with per-corner
+            // values ("10px 20px 0 0") just takes its first token rather than exposing 4 inputs.
+            const borderRadiusValue = styleObj['border-radius'];
+            const newBorderRadius = borderRadiusValue ? (parseFloat(borderRadiusValue.trim().split(/\s+/)[0]) || 0) : 0;
 
             const newBorder = {
                 top: parseBorderSide(styleObj['border-top'] || styleObj['border']),
@@ -263,6 +276,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                     fontStyle: styleObj['font-style'] || defaultFormData.styles.fontStyle,
                     textTransform: styleObj['text-transform'] || defaultFormData.styles.textTransform,
                     padding: newPadding,
+                    borderRadius: newBorderRadius,
                     border: newBorder,
                 },
                 content: editData.content
@@ -340,6 +354,10 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
             }
         });
 
+        if (formData.styles.borderRadius > 0) {
+            newStyleMap.set('border-radius', `${formData.styles.borderRadius}px`);
+        }
+
         const declarations = Array.from(newStyleMap.entries())
             .map(([prop, val]) => `${prop}: ${val}`);
 
@@ -375,6 +393,7 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
         paddingRight: `${formData.styles.padding.right}px`,
         paddingBottom: `${formData.styles.padding.bottom}px`,
         paddingLeft: `${formData.styles.padding.left}px`,
+        borderRadius: `${formData.styles.borderRadius}px`,
         borderTop: formData.styles.border.top.style !== 'none' ? `${formData.styles.border.top.width}px ${formData.styles.border.top.style} ${formData.styles.border.top.color}` : 'none',
         borderRight: formData.styles.border.right.style !== 'none' ? `${formData.styles.border.right.width}px ${formData.styles.border.right.style} ${formData.styles.border.right.color}` : 'none',
         borderBottom: formData.styles.border.bottom.style !== 'none' ? `${formData.styles.border.bottom.width}px ${formData.styles.border.bottom.style} ${formData.styles.border.bottom.color}` : 'none',
@@ -680,11 +699,24 @@ const TextAndStyleEditModal: React.FC<TextAndStyleEditModalProps> = ({ isOpen, o
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="bg-gray-700/40 p-3.5 rounded-lg space-y-3">
                                     <h3 className={sectionLabelClass}>Typography</h3>
-                                    <div>
-                                        <label className={labelClass}>Font Family</label>
-                                        <select value={formData.styles.fontFamily} onChange={e => setFormData(d => ({ ...d, styles: { ...d.styles, fontFamily: e.target.value }}))} className={inputClass}>
-                                            {emailSafeFonts.map(font => <option key={font.name} value={font.value} style={{ fontFamily: font.value }}>{font.name}</option>)}
-                                        </select>
+                                    <div className="grid grid-cols-[1fr_5rem] gap-2">
+                                        <div>
+                                            <label className={labelClass}>Font Family</label>
+                                            <select value={formData.styles.fontFamily} onChange={e => setFormData(d => ({ ...d, styles: { ...d.styles, fontFamily: e.target.value }}))} className={inputClass}>
+                                                {emailSafeFonts.map(font => <option key={font.name} value={font.value} style={{ fontFamily: font.value }}>{font.name}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className={labelClass}>Radius (px)</label>
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                title="Border radius (px)"
+                                                value={formData.styles.borderRadius}
+                                                onChange={e => setFormData(d => ({...d, styles: {...d.styles, borderRadius: parseFloat(e.target.value) || 0}}))}
+                                                className={inputClass}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-3 gap-2">
                                         <div>

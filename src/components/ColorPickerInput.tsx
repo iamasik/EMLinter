@@ -189,12 +189,12 @@ const ColorPickerInput: React.FC<ColorPickerInputProps> = ({ value, onChange }) 
     const hueColor = rgbToHex(hueRgb.r, hueRgb.g, hueRgb.b);
 
     return (
-        <div className="flex items-center gap-2 bg-gray-900 border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-pink-500 px-2 py-1.5">
+        <div className="flex items-center gap-1.5 bg-gray-900 border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-pink-500 px-2 py-1">
             <button
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(o => !o)}
-                className="w-8 h-8 rounded-md border border-gray-600 shadow-inner flex-shrink-0"
+                className="w-6 h-6 rounded-md border border-gray-600 shadow-inner flex-shrink-0"
                 style={{ backgroundColor: swatchHex }}
                 aria-label="Open color picker"
             />
@@ -204,7 +204,7 @@ const ColorPickerInput: React.FC<ColorPickerInputProps> = ({ value, onChange }) 
                 onChange={e => handleHexInputChange(e.target.value)}
                 onBlur={handleHexBlur}
                 spellCheck={false}
-                className="w-full text-sm text-white bg-transparent focus:outline-none font-mono uppercase"
+                className="w-full text-xs text-white bg-transparent focus:outline-none font-mono uppercase"
             />
 
             {isOpen && createPortal(
