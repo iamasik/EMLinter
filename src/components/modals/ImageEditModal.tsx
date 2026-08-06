@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UploadIcon, PlayCircleIcon, ScaleIcon, LinkIcon, InfoIcon } from '../Icons';
 import VideoThumbnailModal from './VideoThumbnailModal';
+import ColorPickerInput from '../ColorPickerInput';
 
 interface ImageEditModalProps {
   isOpen: boolean;
@@ -74,9 +75,38 @@ const stripPx = (value?: string | null) => {
   return match ? match[1] : value;
 };
 
+const BORDER_STYLES = ['none', 'solid', 'dashed', 'dotted', 'double'];
+
+// The rest of the app (VisualEditorPage's postMessage bridge) works with a single CSS border
+// shorthand string, e.g. "1px solid #ff0000" -- these two helpers are the only place that string
+// is taken apart into width/style/color for editing and put back together on save.
+const parseBorderShorthand = (border?: string | null) => {
+  const result = { borderWidth: '', borderStyle: 'solid', borderColor: '#000000' };
+  if (!border) return result;
+  for (const part of String(border).trim().split(/\s+/)) {
+    if (/^\d+(?:\.\d+)?(px)?$/.test(part)) {
+      result.borderWidth = part.replace(/px$/, '');
+    } else if (BORDER_STYLES.includes(part.toLowerCase())) {
+      result.borderStyle = part.toLowerCase();
+    } else if (part) {
+      result.borderColor = part;
+    }
+  }
+  return result;
+};
+
+const buildBorderShorthand = ({ borderWidth, borderStyle, borderColor }: { borderWidth: string; borderStyle: string; borderColor: string }) => {
+  if (!borderWidth || borderStyle === 'none') return '';
+  const width = /^[\d.]+$/.test(borderWidth) ? `${borderWidth}px` : borderWidth;
+  const color = isValidHexColor(borderColor) ? borderColor : (borderColor || '#000000');
+  return `${width} ${borderStyle} ${color}`;
+};
+
+const isValidHexColor = (value: string) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value.trim());
+
 const initialFormData = {
   src: '', alt: '', width: '', height: '', href: '', hasLink: false, target: '_blank',
-  borderRadius: '', border: '',
+  borderRadius: '', borderWidth: '', borderStyle: 'solid', borderColor: '#000000',
   paddingTop: '', paddingRight: '', paddingBottom: '', paddingLeft: '',
 };
 
@@ -87,6 +117,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave
   useEffect(() => {
     if (imageData) {
       const linkExists = imageData.href != null;
+      const { borderWidth, borderStyle, borderColor } = parseBorderShorthand(imageData.border);
       setFormData({
         src: imageData.src || '',
         alt: imageData.alt || '',
@@ -96,7 +127,9 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave
         hasLink: linkExists,
         target: imageData.target || '_blank',
         borderRadius: imageData.borderRadius || '',
-        border: imageData.border || '',
+        borderWidth,
+        borderStyle,
+        borderColor,
         paddingTop: stripPx(imageData.paddingTop),
         paddingRight: stripPx(imageData.paddingRight),
         paddingBottom: stripPx(imageData.paddingBottom),
@@ -132,7 +165,9 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave
   };
 
   const handleSave = () => {
-    onSave({ id: imageData.id, linkId: imageData.linkId, ...formData, src: formData.src.trim(), href: formData.href.trim() });
+    const { borderWidth, borderStyle, borderColor, ...rest } = formData;
+    const border = buildBorderShorthand({ borderWidth, borderStyle, borderColor });
+    onSave({ id: imageData.id, linkId: imageData.linkId, ...rest, border, src: formData.src.trim(), href: formData.href.trim() });
     onClose();
   };
 
@@ -210,12 +245,57 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave
               </div>
             )}
 
-            <div>
-              <label htmlFor="img-alt" className="block text-sm font-medium text-gray-400 mb-1">Alt Text</label>
-              <input type="text" id="img-alt" name="alt" value={formData.alt} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
+            <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+              <div className="sm:col-span-2">
+                <label htmlFor="img-alt" className="block text-sm font-medium text-gray-400 mb-1">Alt Text</label>
+                <input type="text" id="img-alt" name="alt" value={formData.alt} onChange={handleChange} className="w-full px-3 py-2 text-sm text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none" />
+              </div>
+
+              <div className="sm:col-span-3">
+                <label className="block text-xs text-gray-500 mb-1">Border</label>
+                <div className="flex gap-1.5">
+                  <div
+                    title="Border width (px)"
+                    className="w-14 shrink-0 flex items-center gap-1 bg-gray-900 border border-gray-600 rounded-md pl-1.5 pr-1 focus-within:ring-2 focus-within:ring-pink-500"
+                  >
+                    <span className="flex items-center justify-center w-3 shrink-0 text-gray-500"><BorderBoxIcon className="w-3.5 h-3.5" /></span>
+                    <input
+                      type="text"
+                      id="img-borderWidth"
+                      name="borderWidth"
+                      value={formData.borderWidth}
+                      onChange={handleChange}
+                      placeholder="1"
+                      aria-label="Border width (px)"
+                      className="w-full min-w-0 bg-transparent py-1.5 text-sm text-white focus:outline-none"
+                    />
+                  </div>
+                  <select
+                    id="img-borderStyle"
+                    name="borderStyle"
+                    title="Border style"
+                    aria-label="Border style"
+                    value={formData.borderStyle}
+                    onChange={handleChange}
+                    className="w-20 shrink-0 px-1 py-1.5 text-xs text-white bg-gray-900 border border-gray-600 rounded-md focus:ring-2 focus:ring-pink-500 focus:outline-none"
+                  >
+                    <option value="none">None</option>
+                    <option value="solid">Solid</option>
+                    <option value="dashed">Dashed</option>
+                    <option value="dotted">Dotted</option>
+                    <option value="double">Double</option>
+                  </select>
+                  <div className="flex-1 min-w-0">
+                    <ColorPickerInput
+                      value={isValidHexColor(formData.borderColor) ? formData.borderColor : '#000000'}
+                      onChange={(hex) => setFormData(prev => ({ ...prev, borderColor: hex }))}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <CompactField badge="W" title="Width (px or auto)" name="width" value={formData.width} onChange={handleChange} placeholder="auto" />
               <CompactField
                 badge="H" title="Height (px or auto)" name="height" value={formData.height} onChange={handleChange} placeholder="auto"
@@ -232,7 +312,6 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ isOpen, onClose, onSave
                 }
               />
               <CompactField badge={<CornerRadiusIcon className="w-3.5 h-3.5" />} title="Border radius" name="borderRadius" value={formData.borderRadius} onChange={handleChange} placeholder="8px" />
-              <CompactField badge={<BorderBoxIcon className="w-3.5 h-3.5" />} title="Border" name="border" value={formData.border} onChange={handleChange} placeholder="1px solid #000" />
             </div>
 
             <div>
